@@ -21,7 +21,7 @@ export const compactMoney = (value: unknown) => {
 };
 export const int = (value: unknown) => Math.round(num(value)).toLocaleString("ru-RU");
 export const pct = (value: unknown) => `${num(value).toFixed(1)}%`;
-export const days = (value: unknown) => (value === null || value === undefined ? "—" : `${num(value).toFixed(0)} дн.`);
+export const days = (value: unknown) => (value === null || value === undefined ? "—" : `${num(value).toFixed(0)} d`);
 
 export const chartColors = [
   "var(--chart-coral)",
