@@ -14,7 +14,150 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      inventory: {
+        Row: {
+          created_at: string
+          product_id: number
+          stock_on_hand: number
+          store_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          product_id: number
+          stock_on_hand: number
+          store_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          product_id?: number
+          stock_on_hand?: number
+          store_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "inventory_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["store_id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          product_category: string
+          product_cost: number
+          product_id: number
+          product_name: string
+          product_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          product_category: string
+          product_cost: number
+          product_id: number
+          product_name: string
+          product_price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          product_category?: string
+          product_cost?: number
+          product_id?: number
+          product_name?: string
+          product_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sales: {
+        Row: {
+          created_at: string
+          product_id: number
+          sale_date: string
+          sale_id: number
+          store_id: number
+          units: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          product_id: number
+          sale_date: string
+          sale_id: number
+          store_id: number
+          units: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          product_id?: number
+          sale_date?: string
+          sale_id?: number
+          store_id?: number
+          units?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "sales_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["store_id"]
+          },
+        ]
+      }
+      stores: {
+        Row: {
+          created_at: string
+          store_city: string
+          store_id: number
+          store_location: string
+          store_name: string
+          store_open_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          store_city: string
+          store_id: number
+          store_location: string
+          store_name: string
+          store_open_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          store_city?: string
+          store_id?: number
+          store_location?: string
+          store_name?: string
+          store_open_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
