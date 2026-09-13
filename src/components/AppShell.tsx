@@ -16,10 +16,10 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { label: "Обзор", to: "/", icon: LayoutDashboard },
-  { label: "Прибыль по категориям", to: "/profit", icon: TrendingUp },
-  { label: "Наличие и потери", to: "/availability", icon: PackageSearch },
-  { label: "Деньги в запасах", to: "/inventory", icon: Warehouse },
+  { label: "Overview", to: "/", icon: LayoutDashboard },
+  { label: "Category profit", to: "/profit", icon: TrendingUp },
+  { label: "Availability & losses", to: "/availability", icon: PackageSearch },
+  { label: "Cash in inventory", to: "/inventory", icon: Warehouse },
 ] as const;
 
 export function AppShell({
@@ -55,11 +55,11 @@ export function AppShell({
               </span>
             )}
           </div>
-          <button aria-label="Закрыть меню" onClick={() => setMobileNav(false)} className="icon-button text-sidebar-muted lg:hidden">
+          <button aria-label="Close menu" onClick={() => setMobileNav(false)} className="icon-button text-sidebar-muted lg:hidden">
             <X className="size-5" />
           </button>
         </div>
-        <nav aria-label="Основная навигация" className="flex-1 space-y-1 overflow-y-auto px-3 py-6">
+        <nav aria-label="Main navigation" className="flex-1 space-y-1 overflow-y-auto px-3 py-6">
           {navItems.map(({ label, to, icon: Icon }) => (
             <Link
               key={to}
@@ -73,19 +73,19 @@ export function AppShell({
             </Link>
           ))}
           <p className={`px-3 pb-2 pt-7 text-[10px] font-bold uppercase text-sidebar-muted ${collapsed ? "invisible" : ""}`}>
-            Рабочая область
+            Workspace
           </p>
-          <Link to="/data" title={collapsed ? "Данные" : undefined} className={`nav-item ${pathname === "/data" ? "nav-item-active" : ""}`}>
+          <Link to="/data" title={collapsed ? "Data" : undefined} className={`nav-item ${pathname === "/data" ? "nav-item-active" : ""}`}>
             <Database className="size-5 shrink-0" />
-            {!collapsed && <span>Данные и импорт</span>}
+            {!collapsed && <span>Data & import</span>}
           </Link>
-          <button title={collapsed ? "Настройки" : undefined} className="nav-item">
+          <button title={collapsed ? "Settings" : undefined} className="nav-item">
             <Settings className="size-5 shrink-0" />
-            {!collapsed && <span>Настройки</span>}
+            {!collapsed && <span>Settings</span>}
           </button>
-          <button title={collapsed ? "Помощь" : undefined} className="nav-item">
+          <button title={collapsed ? "Help" : undefined} className="nav-item">
             <CircleHelp className="size-5 shrink-0" />
-            {!collapsed && <span>Помощь</span>}
+            {!collapsed && <span>Help</span>}
           </button>
         </nav>
         <div className="border-t border-sidebar-border p-3">
@@ -94,12 +94,12 @@ export function AppShell({
             {!collapsed && (
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">Oleksandr Haidai</p>
-                <p className="truncate text-xs text-sidebar-muted">Региональный менеджер</p>
+                <p className="truncate text-xs text-sidebar-muted">Regional manager</p>
               </div>
             )}
           </div>
           <button
-            aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
+            aria-label={collapsed ? "Expand menu" : "Collapse menu"}
             onClick={() => setCollapsed((value) => !value)}
             className="mt-2 hidden w-full items-center justify-center rounded-md py-2 text-sidebar-muted transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:flex"
           >
@@ -108,12 +108,12 @@ export function AppShell({
         </div>
       </aside>
 
-      {mobileNav && <button aria-label="Закрыть меню" className="fixed inset-0 z-40 bg-overlay lg:hidden" onClick={() => setMobileNav(false)} />}
+      {mobileNav && <button aria-label="Close menu" className="fixed inset-0 z-40 bg-overlay lg:hidden" onClick={() => setMobileNav(false)} />}
 
       <main className={`min-h-screen transition-[margin] duration-300 ${collapsed ? "lg:ml-20" : "lg:ml-64"}`}>
         <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
           <div className="flex min-h-20 flex-wrap items-center gap-3 px-4 py-3 md:px-7">
-            <button aria-label="Открыть меню" onClick={() => setMobileNav(true)} className="icon-button lg:hidden">
+            <button aria-label="Open menu" onClick={() => setMobileNav(true)} className="icon-button lg:hidden">
               <Menu className="size-5" />
             </button>
             <div className="min-w-0 flex-1">

@@ -83,10 +83,10 @@ type StoreOption = { store_id: number; store_name: string; store_city: string };
 
 const grainByPeriod: Record<TrendPeriod, string> = { Daily: "day", Weekly: "week", Monthly: "month" };
 const rangeLabels: Record<RangeKey, string> = {
-  "7": "Последние 7 дней",
-  "30": "Последние 30 дней",
-  "90": "Последние 90 дней",
-  all: "Весь период",
+  "7": "Last 7 days",
+  "30": "Last 30 days",
+  "90": "Last 90 days",
+  all: "All time",
 };
 const donutColors = ["var(--chart-coral)", "var(--chart-teal)", "var(--chart-yellow)", "var(--chart-blue)", "var(--brand)"];
 const toneByIndex = ["coral", "teal", "yellow", "blue"];
@@ -135,12 +135,12 @@ export const Route = createFileRoute("/")({
   errorComponent: ({ error }) => (
     <div className="grid min-h-screen place-items-center p-6">
       <div className="panel max-w-md text-center" role="alert">
-        <h2 className="font-display text-xl font-extrabold">Не удалось загрузить данные</h2>
+        <h2 className="font-display text-xl font-extrabold">Failed to load data</h2>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
       </div>
     </div>
   ),
-  notFoundComponent: () => <div className="p-10 text-center">Страница не найдена.</div>,
+  notFoundComponent: () => <div className="p-10 text-center">Page not found.</div>,
 });
 
 function Dashboard() {
@@ -234,8 +234,8 @@ function Dashboard() {
   );
 
   const storeLabel = storeId === "all"
-    ? "всем магазинам"
-    : storesQuery.data?.find((item) => String(item.store_id) === storeId)?.store_name ?? "магазину";
+    ? "all stores"
+    : storesQuery.data?.find((item) => String(item.store_id) === storeId)?.store_name ?? "store";
 
   const stockItems = (stockQuery.data ?? []).filter((item) => !restocked.includes(`${item.store_id}-${item.product_id}`));
 
@@ -253,20 +253,20 @@ function Dashboard() {
           <button aria-label="Close navigation" onClick={() => setMobileNav(false)} className="icon-button text-sidebar-muted lg:hidden"><X className="size-5" /></button>
         </div>
         <nav aria-label="Primary navigation" className="flex-1 space-y-1 px-3 py-6">
-          <button title={collapsed ? "Обзор" : undefined} className="nav-item nav-item-active">
-            <LayoutDashboard className="size-5 shrink-0" />{!collapsed && <span>Обзор</span>}
+          <button title={collapsed ? "Overview" : undefined} className="nav-item nav-item-active">
+            <LayoutDashboard className="size-5 shrink-0" />{!collapsed && <span>Overview</span>}
           </button>
           {[
-            { label: "Прибыль по категориям", to: "/profit" as const, icon: TrendingUp },
-            { label: "Наличие и потери", to: "/availability" as const, icon: PackageOpen },
-            { label: "Деньги в запасах", to: "/inventory" as const, icon: Boxes },
+            { label: "Category Profit", to: "/profit" as const, icon: TrendingUp },
+            { label: "Availability & Loss", to: "/availability" as const, icon: PackageOpen },
+            { label: "Inventory Value", to: "/inventory" as const, icon: Boxes },
           ].map(({ label, to, icon: Icon }) => (
             <Link key={to} to={to} title={collapsed ? label : undefined} className="nav-item">
               <Icon className="size-5 shrink-0" />{!collapsed && <span className="truncate">{label}</span>}
             </Link>
           ))}
-          <button title={collapsed ? "Магазины" : undefined} className="nav-item">
-            <Store className="size-5 shrink-0" />{!collapsed && <span>Магазины</span>}
+          <button title={collapsed ? "Stores" : undefined} className="nav-item">
+            <Store className="size-5 shrink-0" />{!collapsed && <span>Stores</span>}
           </button>
           <p className={`px-3 pb-2 pt-7 text-[10px] font-bold uppercase text-sidebar-muted ${collapsed ? "invisible" : ""}`}>Workspace</p>
           <Link to="/data" title={collapsed ? "Data manager" : undefined} className="nav-item"><Database className="size-5 shrink-0" />{!collapsed && <span>Data manager</span>}</Link>
@@ -292,13 +292,13 @@ function Dashboard() {
             <button aria-label="Open navigation" onClick={() => setMobileNav(true)} className="icon-button lg:hidden"><Menu className="size-5" /></button>
             <label className="relative hidden max-w-md flex-1 sm:block">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Поиск: товар, магазин, город, № продажи" className="h-10 w-full rounded-md border border-input bg-muted/60 pl-10 pr-4 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products, stores, cities, orders..." className="h-10 w-full rounded-md border border-input bg-muted/60 pl-10 pr-4 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
             </label>
             <div className="ml-auto flex items-center gap-2">
               <div className="control-wrap hidden md:flex">
                 <MapPin className="size-4 text-muted-foreground" />
                 <select aria-label="Store location" value={storeId} onChange={(event) => setStoreId(event.target.value)} className="max-w-52 bg-transparent text-sm font-semibold outline-none">
-                  <option value="all">Все магазины</option>
+                  <option value="all">All stores</option>
                   {(storesQuery.data ?? []).map((item) => (
                     <option key={item.store_id} value={String(item.store_id)}>{item.store_name} · {item.store_city}</option>
                   ))}
@@ -310,30 +310,30 @@ function Dashboard() {
               </div>
               <div className="relative">
                 <button aria-label="Notifications" onClick={() => setShowNotifications((value) => !value)} className="icon-button relative"><Bell className="size-5" />{stockItems.length > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-brand ring-2 ring-background" />}</button>
-                {showNotifications && <div className="popover right-0 w-72"><p className="px-3 py-2 text-sm font-bold">Уведомления</p><div className="border-t border-border p-3"><p className="text-sm font-semibold">{stockItems.length} позиций с низким остатком</p><p className="mt-1 text-xs text-muted-foreground">Проверьте склад перед открытием магазинов.</p></div></div>}
+                {showNotifications && <div className="popover right-0 w-72"><p className="px-3 py-2 text-sm font-bold">Notifications</p><div className="border-t border-border p-3"><p className="text-sm font-semibold">{stockItems.length} items with low stock</p><p className="mt-1 text-xs text-muted-foreground">Review inventory before store opening.</p></div></div>}
               </div>
             </div>
           </div>
           <div className="flex gap-2 px-4 pb-3 sm:hidden">
-            <label className="relative flex-1"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Поиск продаж…" className="h-10 w-full rounded-md border border-input bg-muted/60 pl-10 pr-3 text-sm outline-none" /></label>
+            <label className="relative flex-1"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search sales..." className="h-10 w-full rounded-md border border-input bg-muted/60 pl-10 pr-3 text-sm outline-none" /></label>
           </div>
         </header>
 
         <div className="mx-auto max-w-[1600px] px-4 py-7 md:px-7 md:py-9">
           <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="mb-1 text-sm font-semibold text-brand">{range.from && range.to ? `${range.from} — ${range.to}` : "Нет данных о продажах"}</p>
-              <h1 className="font-display text-3xl font-extrabold md:text-4xl">Продажи по {storeLabel}</h1>
-              <p className="mt-2 text-sm text-muted-foreground">{bounds ? `${bounds.sale_rows.toLocaleString("ru-RU")} записей продаж в базе` : "Загрузка данных…"}</p>
+              <p className="mb-1 text-sm font-semibold text-brand">{range.from && range.to ? `${range.from} — ${range.to}` : "No sales data"}</p>
+              <h1 className="font-display text-3xl font-extrabold md:text-4xl">Sales by {storeLabel}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{bounds ? `${bounds.sale_rows.toLocaleString("en-US")} sales records in database` : "Loading data..."}</p>
             </div>
-            <Link to="/data" className="primary-button"><Database className="size-4" />Импорт данных</Link>
+            <Link to="/data" className="primary-button"><Database className="size-4" />Import data</Link>
           </div>
 
           {loadError && <div className="panel mb-5 border-destructive/40 text-sm text-destructive" role="alert">{loadError.message}</div>}
-          {empty && <div className="panel mb-5 text-sm text-muted-foreground">В базе пока нет продаж. Загрузите файлы на странице <Link to="/data" className="font-bold text-primary hover:underline">управления данными</Link>.</div>}
+          {empty && <div className="panel mb-5 text-sm text-muted-foreground">No sales records found. Upload files in the <Link to="/data" className="font-bold text-primary hover:underline">Data Manager</Link>.</div>}
 
           <section aria-label="Key metrics" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard title="Выручка" value={kpis ? money(Number(kpis.revenue)) : "—"} change={kpis ? growth(Number(kpis.revenue), Number(kpis.prev_revenue)) : "—"} icon={<TrendingUp className="size-5" />} tone="coral">
+            <MetricCard title="Revenue" value={kpis ? money(Number(kpis.revenue)) : "—"} change={kpis ? growth(Number(kpis.revenue), Number(kpis.prev_revenue)) : "—"} icon={<TrendingUp className="size-5" />} tone="coral">
               {sparkline.length > 1 && (
                 <div className="h-9 w-28">
                   <ResponsiveContainer width="100%" height="100%">
@@ -342,25 +342,25 @@ function Dashboard() {
                 </div>
               )}
             </MetricCard>
-            <MetricCard title="Продано игрушек" value={kpis ? Number(kpis.units).toLocaleString("ru-RU") : "—"} change={kpis ? growth(Number(kpis.units), Number(kpis.prev_units)) : "—"} icon={<ShoppingBag className="size-5" />} tone="teal">
-              <p className="text-xs text-muted-foreground">{kpis ? `${Number(kpis.order_count).toLocaleString("ru-RU")} продаж` : ""}</p>
+            <MetricCard title="Units Sold" value={kpis ? Number(kpis.units).toLocaleString("en-US") : "—"} change={kpis ? growth(Number(kpis.units), Number(kpis.prev_units)) : "—"} icon={<ShoppingBag className="size-5" />} tone="teal">
+              <p className="text-xs text-muted-foreground">{kpis ? `${Number(kpis.order_count).toLocaleString("en-US")} orders` : ""}</p>
             </MetricCard>
-            <MetricCard title="Активные магазины" value={kpis ? String(kpis.store_count) : "—"} change={kpis ? `${storesQuery.data?.length ?? 0} всего` : "—"} icon={<Store className="size-5" />} tone="blue">
-              <p className="text-xs text-muted-foreground">с продажами за период</p>
+            <MetricCard title="Active Stores" value={kpis ? String(kpis.store_count) : "—"} change={kpis ? `${storesQuery.data?.length ?? 0} total` : "—"} icon={<Store className="size-5" />} tone="blue">
+              <p className="text-xs text-muted-foreground">with sales in period</p>
             </MetricCard>
-            <MetricCard title="Топ категория" value={kpis?.top_category ?? "—"} change={kpis ? `${Number(kpis.top_category_share)}%` : "—"} icon={<Boxes className="size-5" />} tone="yellow">
-              <p className="text-xs text-muted-foreground">от общей выручки</p>
+            <MetricCard title="Top Category" value={kpis?.top_category ?? "—"} change={kpis ? `${Number(kpis.top_category_share)}%` : "—"} icon={<Boxes className="size-5" />} tone="yellow">
+              <p className="text-xs text-muted-foreground">of total revenue</p>
             </MetricCard>
           </section>
 
           <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.75fr)_minmax(300px,0.75fr)]">
             <div className="panel min-w-0">
-              <div className="panel-heading"><div><h2>Динамика продаж</h2><p>Выручка по данным из базы</p></div><div className="segmented">{(["Daily", "Weekly", "Monthly"] as TrendPeriod[]).map((item) => <button key={item} onClick={() => setPeriod(item)} className={period === item ? "segmented-active" : ""}>{item}</button>)}</div></div>
+              <div className="panel-heading"><div><h2>Sales Dynamics</h2><p>Revenue trend from database</p></div><div className="segmented">{(["Daily", "Weekly", "Monthly"] as TrendPeriod[]).map((item) => <button key={item} onClick={() => setPeriod(item)} className={period === item ? "segmented-active" : ""}>{item}</button>)}</div></div>
               <div className="mt-6 h-72">
                 {trendQuery.isPending ? (
                   <div className="grid h-full place-items-center"><Loader2 className="size-6 animate-spin text-brand" /></div>
                 ) : trendChartData.length === 0 ? (
-                  <div className="grid h-full place-items-center text-sm text-muted-foreground">Нет данных за выбранный период</div>
+                  <div className="grid h-full place-items-center text-sm text-muted-foreground">No data for selected period</div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     {period === "Monthly" ? (
@@ -371,19 +371,19 @@ function Dashboard() {
                   </ResponsiveContainer>
                 )}
               </div>
-              <div className="mt-3 flex justify-center gap-5 text-xs text-muted-foreground"><span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-brand" />Выручка</span></div>
+              <div className="mt-3 flex justify-center gap-5 text-xs text-muted-foreground"><span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-brand" />Revenue</span></div>
             </div>
             <div className="panel">
-              <div className="panel-heading"><div><h2>Продажи по категориям</h2><p>Структура выручки за период</p></div><button aria-label="Category chart options" className="icon-button"><MoreHorizontal className="size-5" /></button></div>
+              <div className="panel-heading"><div><h2>Sales by Categories</h2><p>Revenue breakdown for period</p></div><button aria-label="Category chart options" className="icon-button"><MoreHorizontal className="size-5" /></button></div>
               {categories.length === 0 ? (
-                <div className="grid h-48 place-items-center text-sm text-muted-foreground">{categoryQuery.isPending ? <Loader2 className="size-6 animate-spin text-brand" /> : "Нет данных"}</div>
+                <div className="grid h-48 place-items-center text-sm text-muted-foreground">{categoryQuery.isPending ? <Loader2 className="size-6 animate-spin text-brand" /> : "No data"}</div>
               ) : (
                 <>
                   <div className="relative mx-auto mt-5 h-48 max-w-60">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart><Pie data={categories} dataKey="value" innerRadius={58} outerRadius={82} paddingAngle={3} stroke="none">{categories.map((item) => <Cell key={item.name} fill={item.color} />)}</Pie><Tooltip formatter={(value, name) => [`${value}%`, String(name)]} /></PieChart>
                     </ResponsiveContainer>
-                    <div className="pointer-events-none absolute inset-0 grid place-items-center text-center"><div><strong className="font-display text-2xl">{kpis ? compactMoney(Number(kpis.revenue)) : "—"}</strong><p className="text-xs text-muted-foreground">Всего продаж</p></div></div>
+                    <div className="pointer-events-none absolute inset-0 grid place-items-center text-center"><div><strong className="font-display text-2xl">{kpis ? compactMoney(Number(kpis.revenue)) : "—"}</strong><p className="text-xs text-muted-foreground">Total Sales</p></div></div>
                   </div>
                   <div className="mt-4 space-y-3">{categories.map((category) => <div key={category.name} className="flex items-center gap-3 text-sm"><span className="size-2.5 rounded-sm" style={{ backgroundColor: category.color }} /><span className="flex-1 truncate text-muted-foreground">{category.name}</span><strong>{category.value}%</strong></div>)}</div>
                 </>
@@ -393,27 +393,27 @@ function Dashboard() {
 
           <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.75fr)_minmax(320px,0.75fr)]">
             <div className="panel overflow-hidden p-0">
-              <div className="panel-heading border-b border-border p-5 md:p-6"><div><h2>Последние продажи</h2><p>Свежие записи из базы</p></div></div>
+              <div className="panel-heading border-b border-border p-5 md:p-6"><div><h2>Recent Sales</h2><p>Latest entries from database</p></div></div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground"><th>№</th><th>Товар</th><th>Категория</th><th>Магазин</th><th>Кол-во</th><th>Сумма</th><th>Дата</th></tr></thead><tbody>{(salesQuery.data ?? []).map((sale) => <tr key={sale.sale_id} className="border-b border-border last:border-0 hover:bg-muted/30"><td className="font-bold">#{sale.sale_id}</td><td>{sale.product_name}</td><td className="text-muted-foreground">{sale.product_category}</td><td className="text-muted-foreground">{sale.store_name} · {sale.store_city}</td><td>{sale.units}</td><td className="font-semibold">{money(Number(sale.total))}</td><td className="text-muted-foreground">{sale.sale_date}</td></tr>)}</tbody></table>
+                <table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground"><th>#</th><th>Product</th><th>Category</th><th>Store</th><th>Qty</th><th>Total</th><th>Date</th></tr></thead><tbody>{(salesQuery.data ?? []).map((sale) => <tr key={sale.sale_id} className="border-b border-border last:border-0 hover:bg-muted/30"><td className="font-bold">#{sale.sale_id}</td><td>{sale.product_name}</td><td className="text-muted-foreground">{sale.product_category}</td><td className="text-muted-foreground">{sale.store_name} · {sale.store_city}</td><td>{sale.units}</td><td className="font-semibold">{money(Number(sale.total))}</td><td className="text-muted-foreground">{sale.sale_date}</td></tr>)}</tbody></table>
                 {salesQuery.isPending && <div className="grid py-12 place-items-center"><Loader2 className="size-6 animate-spin text-brand" /></div>}
-                {!salesQuery.isPending && (salesQuery.data ?? []).length === 0 && <div className="py-12 text-center text-sm text-muted-foreground">Продажи не найдены.</div>}
+                {!salesQuery.isPending && (salesQuery.data ?? []).length === 0 && <div className="py-12 text-center text-sm text-muted-foreground">No sales found.</div>}
               </div>
-              <div className="flex items-center justify-between border-t border-border px-5 py-4 text-sm"><span className="text-muted-foreground">Показано {(salesQuery.data ?? []).length} из {bounds?.sale_rows.toLocaleString("ru-RU") ?? "—"}</span><Link to="/data" className="font-bold text-primary hover:underline">Все продажи</Link></div>
+              <div className="flex items-center justify-between border-t border-border px-5 py-4 text-sm"><span className="text-muted-foreground">Showing {(salesQuery.data ?? []).length} of {bounds?.sale_rows.toLocaleString("en-US") ?? "—"}</span><Link to="/data" className="font-bold text-primary hover:underline">All sales</Link></div>
             </div>
 
             <div className="panel p-0">
-              <div className="panel-heading border-b border-border p-5 md:p-6"><div><div className="flex items-center gap-2"><h2>Низкий остаток</h2>{stockItems.length > 0 && <span className="rounded-full bg-destructive-soft px-2 py-0.5 text-xs font-bold text-destructive">{stockItems.length}</span>}</div><p>Остаток 10 штук и меньше</p></div></div>
+              <div className="panel-heading border-b border-border p-5 md:p-6"><div><div className="flex items-center gap-2"><h2>Low Stock</h2>{stockItems.length > 0 && <span className="rounded-full bg-destructive-soft px-2 py-0.5 text-xs font-bold text-destructive">{stockItems.length}</span>}</div><p>10 units or less remaining</p></div></div>
               <div className="divide-y divide-border">
                 {stockItems.map((item, index) => (
                   <div key={`${item.store_id}-${item.product_id}`} className="flex items-center gap-3 p-4">
                     <div className={`stock-thumb stock-${toneByIndex[index % toneByIndex.length]}`}><PackageOpen className="size-5" /></div>
-                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{item.product_name}</p><p className="truncate text-xs text-muted-foreground">{item.store_name} · <span className="font-semibold text-destructive">{item.stock_on_hand} шт.</span></p></div>
-                    <button onClick={() => setRestocked((items) => [...items, `${item.store_id}-${item.product_id}`])} className="secondary-button">Пополнить</button>
+                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{item.product_name}</p><p className="truncate text-xs text-muted-foreground">{item.store_name} · <span className="font-semibold text-destructive">{item.stock_on_hand} units</span></p></div>
+                    <button onClick={() => setRestocked((items) => [...items, `${item.store_id}-${item.product_id}`])} className="secondary-button">Restock</button>
                   </div>
                 ))}
                 {stockQuery.isPending && <div className="grid py-12 place-items-center"><Loader2 className="size-6 animate-spin text-brand" /></div>}
-                {!stockQuery.isPending && stockItems.length === 0 && <div className="px-5 py-12 text-center"><PackageCheck className="mx-auto size-8 text-success" /><p className="mt-3 text-sm font-bold">Остатки в норме</p><p className="mt-1 text-xs text-muted-foreground">Все оповещения обработаны.</p></div>}
+                {!stockQuery.isPending && stockItems.length === 0 && <div className="px-5 py-12 text-center"><PackageCheck className="mx-auto size-8 text-success" /><p className="mt-3 text-sm font-bold">Stock Level Healthy</p><p className="mt-1 text-xs text-muted-foreground">All stock alerts resolved.</p></div>}
               </div>
             </div>
           </section>
@@ -426,7 +426,7 @@ function Dashboard() {
 function MetricCard({ title, value, change, icon, tone, children }: { title: string; value: string; change: string; icon: React.ReactNode; tone: string; children: React.ReactNode }) {
   const negative = change.startsWith("-");
   const showChange = change !== "—";
-  return <article className="metric-card"><div className="flex items-start justify-between"><div><p className="text-sm font-semibold text-muted-foreground">{title}</p><p className="mt-2 font-display text-2xl font-extrabold">{value}</p></div><span className={`metric-icon metric-${tone}`}>{icon}</span></div><div className="mt-5 flex min-h-9 items-end justify-between gap-3"><div>{showChange && <><span className={`text-xs font-bold ${negative ? "text-destructive" : "text-success"}`}>{negative ? "↓" : "↑"} {change.replace("-", "")}</span><span className="ml-1 text-xs text-muted-foreground">vs пред. период</span></>}</div>{children}</div></article>;
+  return <article className="metric-card"><div className="flex items-start justify-between"><div><p className="text-sm font-semibold text-muted-foreground">{title}</p><p className="mt-2 font-display text-2xl font-extrabold">{value}</p></div><span className={`metric-icon metric-${tone}`}>{icon}</span></div><div className="mt-5 flex min-h-9 items-end justify-between gap-3"><div>{showChange && <><span className={`text-xs font-bold ${negative ? "text-destructive" : "text-success"}`}>{negative ? "↓" : "↑"} {change.replace("-", "")}</span><span className="ml-1 text-xs text-muted-foreground">vs prev period</span></>}</div>{children}</div></article>;
 }
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string; payload?: { units?: number } }>; label?: string }) {
@@ -435,8 +435,8 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   return (
     <div className="rounded-md border border-border bg-popover p-3 text-xs shadow-lg">
       <p className="mb-2 font-bold">{label}</p>
-      {payload.map((item) => <p key={item.name} style={{ color: item.color }} className="font-semibold">Выручка: {money(Number(item.value))}</p>)}
-      {typeof units === "number" && <p className="mt-1 text-muted-foreground">Продано: {units.toLocaleString("ru-RU")} шт.</p>}
+      {payload.map((item) => <p key={item.name} style={{ color: item.color }} className="font-semibold">Revenue: {money(Number(item.value))}</p>)}
+      {typeof units === "number" && <p className="mt-1 text-muted-foreground">Sold: {units.toLocaleString("en-US")} units</p>}
     </div>
   );
 }
