@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
   Area,
@@ -7,6 +8,8 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -24,6 +27,7 @@ import {
   CircleHelp,
   Database,
   LayoutDashboard,
+  Loader2,
   MapPin,
   Menu,
   MoreHorizontal,
@@ -38,58 +42,82 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type TrendPeriod = "Daily" | "Weekly" | "Monthly";
-type OrderStatus = "All" | "Completed" | "Processing" | "Pending";
+type RangeKey = "7" | "30" | "90" | "all";
 
-const trendData: Record<TrendPeriod, Array<{ label: string; sales: number; target: number }>> = {
-  Daily: [
-    { label: "Mon", sales: 8200, target: 7000 }, { label: "Tue", sales: 9400, target: 7600 },
-    { label: "Wed", sales: 7800, target: 8200 }, { label: "Thu", sales: 11200, target: 8800 },
-    { label: "Fri", sales: 12600, target: 9500 }, { label: "Sat", sales: 14200, target: 10800 },
-    { label: "Sun", sales: 11900, target: 10400 },
-  ],
-  Weekly: [
-    { label: "W1", sales: 52400, target: 48000 }, { label: "W2", sales: 61800, target: 52000 },
-    { label: "W3", sales: 57100, target: 55000 }, { label: "W4", sales: 68900, target: 59000 },
-    { label: "W5", sales: 74200, target: 62000 },
-  ],
-  Monthly: [
-    { label: "Jan", sales: 186000, target: 174000 }, { label: "Feb", sales: 204000, target: 181000 },
-    { label: "Mar", sales: 198000, target: 190000 }, { label: "Apr", sales: 237000, target: 205000 },
-    { label: "May", sales: 249000, target: 218000 }, { label: "Jun", sales: 284000, target: 235000 },
-  ],
+type Kpis = {
+  revenue: number;
+  units: number;
+  order_count: number;
+  store_count: number;
+  top_category: string | null;
+  top_category_share: number;
+  prev_revenue: number;
+  prev_units: number;
+};
+type TrendRow = { bucket: string; label: string; sales: number; units: number };
+type CategoryRow = { category: string; revenue: number; units: number };
+type SaleRow = {
+  sale_id: number;
+  sale_date: string;
+  store_name: string;
+  store_city: string;
+  product_name: string;
+  product_category: string;
+  units: number;
+  total: number;
+};
+type StockRow = {
+  store_id: number;
+  product_id: number;
+  product_name: string;
+  product_category: string;
+  store_name: string;
+  store_city: string;
+  stock_on_hand: number;
+};
+type Bounds = { min_date: string | null; max_date: string | null; sale_rows: number };
+type StoreOption = { store_id: number; store_name: string; store_city: string };
+
+const grainByPeriod: Record<TrendPeriod, string> = { Daily: "day", Weekly: "week", Monthly: "month" };
+const rangeLabels: Record<RangeKey, string> = {
+  "7": "Последние 7 дней",
+  "30": "Последние 30 дней",
+  "90": "Последние 90 дней",
+  all: "Весь период",
+};
+const donutColors = ["var(--chart-coral)", "var(--chart-teal)", "var(--chart-yellow)", "var(--chart-blue)", "var(--brand)"];
+const toneByIndex = ["coral", "teal", "yellow", "blue"];
+
+type RpcClient = {
+  rpc: (fn: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 };
 
-const categories = [
-  { name: "Building Sets", value: 34, color: "var(--chart-coral)" },
-  { name: "Plush Toys", value: 26, color: "var(--chart-teal)" },
-  { name: "STEM & Learning", value: 22, color: "var(--chart-yellow)" },
-  { name: "Games & Puzzles", value: 18, color: "var(--chart-blue)" },
-];
+async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T[]> {
+  const client = supabase as unknown as RpcClient;
+  const { data, error } = await client.rpc(name, args);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as T[];
+}
 
-const orders = [
-  { id: "#TW-8492", customer: "Maya Thompson", initials: "MT", store: "SoHo, NY", items: 4, total: "$189.40", status: "Completed" as const, date: "Sep 13, 2026" },
-  { id: "#TW-8491", customer: "Ethan Williams", initials: "EW", store: "Austin Central", items: 2, total: "$74.95", status: "Processing" as const, date: "Sep 13, 2026" },
-  { id: "#TW-8490", customer: "Sophia Chen", initials: "SC", store: "Seattle Market", items: 6, total: "$312.80", status: "Completed" as const, date: "Sep 12, 2026" },
-  { id: "#TW-8489", customer: "Noah Garcia", initials: "NG", store: "Miami Beach", items: 1, total: "$42.50", status: "Pending" as const, date: "Sep 12, 2026" },
-  { id: "#TW-8488", customer: "Amelia Brooks", initials: "AB", store: "SoHo, NY", items: 3, total: "$128.25", status: "Processing" as const, date: "Sep 12, 2026" },
-];
 
-const initialStock = [
-  { name: "Galaxy Explorer Set", sku: "BLD-2841", left: 3, color: "coral" },
-  { name: "Milo the Moon Bear", sku: "PLH-1049", left: 5, color: "teal" },
-  { name: "Junior Science Lab", sku: "STM-3320", left: 7, color: "yellow" },
-  { name: "Woodland Train Set", sku: "VEH-2174", left: 8, color: "blue" },
-];
+const money = (value: number) =>
+  `$${Math.round(value).toLocaleString("en-US")}`;
+const compactMoney = (value: number) =>
+  value >= 1_000_000 ? `$${(value / 1_000_000).toFixed(1)}M` : value >= 1000 ? `$${Math.round(value / 1000)}k` : `$${value}`;
+const growth = (current: number, previous: number) =>
+  previous > 0 ? `${(((current - previous) / previous) * 100).toFixed(1)}%` : "—";
 
-const navItems = [
-  { label: "Overview", icon: LayoutDashboard }, { label: "Orders", icon: ShoppingBag },
-  { label: "Inventory", icon: Boxes }, { label: "Products", icon: PackageOpen },
-  { label: "Customers", icon: Users }, { label: "Store locations", icon: Store },
-];
+function shiftDays(date: string, days: number) {
+  const parsed = new Date(`${date}T00:00:00Z`);
+  parsed.setUTCDate(parsed.getUTCDate() + days);
+  return parsed.toISOString().slice(0, 10);
+}
 
 export const Route = createFileRoute("/")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "ToyWorld Sales Dashboard" },
@@ -101,28 +129,118 @@ export const Route = createFileRoute("/")({
     ],
   }),
   component: Dashboard,
+  pendingComponent: () => (
+    <div className="grid min-h-screen place-items-center"><Loader2 className="size-8 animate-spin text-brand" /></div>
+  ),
+  errorComponent: ({ error }) => (
+    <div className="grid min-h-screen place-items-center p-6">
+      <div className="panel max-w-md text-center" role="alert">
+        <h2 className="font-display text-xl font-extrabold">Не удалось загрузить данные</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+      </div>
+    </div>
+  ),
+  notFoundComponent: () => <div className="p-10 text-center">Страница не найдена.</div>,
 });
 
 function Dashboard() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
-  const [period, setPeriod] = useState<TrendPeriod>("Daily");
-  const [status, setStatus] = useState<OrderStatus>("All");
-  const [store, setStore] = useState("All locations");
-  const [range, setRange] = useState("Sep 7 – Sep 13");
+  const [period, setPeriod] = useState<TrendPeriod>("Monthly");
+  const [storeId, setStoreId] = useState<string>("all");
+  const [rangeKey, setRangeKey] = useState<RangeKey>("all");
   const [showDates, setShowDates] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [search, setSearch] = useState("");
   const [restocked, setRestocked] = useState<string[]>([]);
 
-  const visibleOrders = useMemo(() => orders.filter((order) => {
-    const statusMatch = status === "All" || order.status === status;
-    const query = search.trim().toLowerCase();
-    const searchMatch = !query || `${order.id} ${order.customer} ${order.store}`.toLowerCase().includes(query);
-    return statusMatch && searchMatch;
-  }), [search, status]);
+  const boundsQuery = useQuery({
+    queryKey: ["dashboard", "bounds"],
+    queryFn: () => rpc<Bounds>("dashboard_date_bounds", {}).then((rows) => rows[0] ?? null),
+  });
+  const storesQuery = useQuery({
+    queryKey: ["dashboard", "stores"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stores")
+        .select("store_id, store_name, store_city")
+        .order("store_name")
+        .limit(500);
+      if (error) throw new Error(error.message);
+      return (data ?? []) as StoreOption[];
+    },
+  });
 
-  const stockItems = initialStock.filter((item) => !restocked.includes(item.sku));
+  const bounds = boundsQuery.data ?? null;
+  const maxDate = bounds?.max_date ?? null;
+  const range = useMemo(() => {
+    if (!maxDate) return { from: null as string | null, to: null as string | null };
+    if (rangeKey === "all") return { from: bounds?.min_date ?? null, to: maxDate };
+    return { from: shiftDays(maxDate, -(Number(rangeKey) - 1)), to: maxDate };
+  }, [bounds?.min_date, maxDate, rangeKey]);
+
+  const storeParam = storeId === "all" ? null : Number(storeId);
+  const enabled = Boolean(maxDate);
+  const filterKey = [range.from, range.to, storeParam] as const;
+
+  const kpisQuery = useQuery({
+    queryKey: ["dashboard", "kpis", ...filterKey],
+    enabled,
+    queryFn: () =>
+      rpc<Kpis>("dashboard_kpis", { p_from: range.from, p_to: range.to, p_store_id: storeParam }).then((rows) => rows[0] ?? null),
+  });
+  const trendQuery = useQuery({
+    queryKey: ["dashboard", "trend", period, ...filterKey],
+    enabled,
+    queryFn: () =>
+      rpc<TrendRow>("dashboard_sales_trend", {
+        p_grain: grainByPeriod[period],
+        p_from: range.from,
+        p_to: range.to,
+        p_store_id: storeParam,
+      }),
+  });
+  const categoryQuery = useQuery({
+    queryKey: ["dashboard", "categories", ...filterKey],
+    enabled,
+    queryFn: () => rpc<CategoryRow>("dashboard_category_sales", { p_from: range.from, p_to: range.to, p_store_id: storeParam }),
+  });
+  const salesQuery = useQuery({
+    queryKey: ["dashboard", "recent", storeParam, search.trim()],
+    queryFn: () => rpc<SaleRow>("dashboard_recent_sales", { p_limit: 10, p_store_id: storeParam, p_search: search.trim() || null }),
+  });
+  const stockQuery = useQuery({
+    queryKey: ["dashboard", "low-stock", storeParam],
+    queryFn: () => rpc<StockRow>("dashboard_low_stock", { p_threshold: 10, p_limit: 8, p_store_id: storeParam }),
+  });
+
+  const kpis = kpisQuery.data ?? null;
+  const trend = trendQuery.data ?? [];
+  const categories = useMemo(() => {
+    const rows = categoryQuery.data ?? [];
+    const total = rows.reduce((sum, row) => sum + Number(row.revenue), 0);
+    return rows.map((row, index) => ({
+      name: row.category,
+      revenue: Number(row.revenue),
+      value: total > 0 ? Number(((Number(row.revenue) / total) * 100).toFixed(1)) : 0,
+      color: donutColors[index % donutColors.length],
+    }));
+  }, [categoryQuery.data]);
+
+  const sparkline = useMemo(() => trend.slice(-12).map((row) => ({ value: Number(row.sales) })), [trend]);
+  const trendChartData = useMemo(
+    () => trend.map((row) => ({ label: row.label, sales: Number(row.sales), units: Number(row.units) })),
+    [trend],
+  );
+
+  const storeLabel = storeId === "all"
+    ? "всем магазинам"
+    : storesQuery.data?.find((item) => String(item.store_id) === storeId)?.store_name ?? "магазину";
+
+  const stockItems = (stockQuery.data ?? []).filter((item) => !restocked.includes(`${item.store_id}-${item.product_id}`));
+
+  const empty = Boolean(bounds && bounds.sale_rows === 0);
+  const loadError = boundsQuery.error ?? kpisQuery.error ?? trendQuery.error ?? categoryQuery.error;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -135,7 +253,11 @@ function Dashboard() {
           <button aria-label="Close navigation" onClick={() => setMobileNav(false)} className="icon-button text-sidebar-muted lg:hidden"><X className="size-5" /></button>
         </div>
         <nav aria-label="Primary navigation" className="flex-1 space-y-1 px-3 py-6">
-          {navItems.map(({ label, icon: Icon }, index) => (
+          {[
+            { label: "Overview", icon: LayoutDashboard }, { label: "Orders", icon: ShoppingBag },
+            { label: "Inventory", icon: Boxes }, { label: "Products", icon: PackageOpen },
+            { label: "Customers", icon: Users }, { label: "Store locations", icon: Store },
+          ].map(({ label, icon: Icon }, index) => (
             <button key={label} title={collapsed ? label : undefined} className={`nav-item ${index === 0 ? "nav-item-active" : ""}`}>
               <Icon className="size-5 shrink-0" />{!collapsed && <span>{label}</span>}
             </button>
@@ -164,71 +286,129 @@ function Dashboard() {
             <button aria-label="Open navigation" onClick={() => setMobileNav(true)} className="icon-button lg:hidden"><Menu className="size-5" /></button>
             <label className="relative hidden max-w-md flex-1 sm:block">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search orders, products, customers…" className="h-10 w-full rounded-md border border-input bg-muted/60 pl-10 pr-4 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Поиск: товар, магазин, город, № продажи" className="h-10 w-full rounded-md border border-input bg-muted/60 pl-10 pr-4 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
             </label>
             <div className="ml-auto flex items-center gap-2">
-              <div className="control-wrap hidden md:flex"><MapPin className="size-4 text-muted-foreground" /><select aria-label="Store location" value={store} onChange={(event) => setStore(event.target.value)} className="bg-transparent text-sm font-semibold outline-none"><option>All locations</option><option>SoHo, NY</option><option>Austin Central</option><option>Seattle Market</option><option>Miami Beach</option></select></div>
+              <div className="control-wrap hidden md:flex">
+                <MapPin className="size-4 text-muted-foreground" />
+                <select aria-label="Store location" value={storeId} onChange={(event) => setStoreId(event.target.value)} className="max-w-52 bg-transparent text-sm font-semibold outline-none">
+                  <option value="all">Все магазины</option>
+                  {(storesQuery.data ?? []).map((item) => (
+                    <option key={item.store_id} value={String(item.store_id)}>{item.store_name} · {item.store_city}</option>
+                  ))}
+                </select>
+              </div>
               <div className="relative hidden sm:block">
-                <button onClick={() => setShowDates((value) => !value)} className="control-wrap"><CalendarDays className="size-4 text-muted-foreground" /><span>{range}</span><ChevronDown className="size-3.5 text-muted-foreground" /></button>
-                {showDates && <div className="popover right-0 w-52">{["Sep 7 – Sep 13", "Aug 31 – Sep 6", "Aug 14 – Sep 13"].map((item) => <button key={item} onClick={() => { setRange(item); setShowDates(false); }} className={`popover-row ${range === item ? "text-primary" : ""}`}>{item}</button>)}</div>}
+                <button onClick={() => setShowDates((value) => !value)} className="control-wrap"><CalendarDays className="size-4 text-muted-foreground" /><span>{rangeLabels[rangeKey]}</span><ChevronDown className="size-3.5 text-muted-foreground" /></button>
+                {showDates && <div className="popover right-0 w-56">{(Object.keys(rangeLabels) as RangeKey[]).map((item) => <button key={item} onClick={() => { setRangeKey(item); setShowDates(false); }} className={`popover-row ${rangeKey === item ? "text-primary" : ""}`}>{rangeLabels[item]}</button>)}</div>}
               </div>
               <div className="relative">
-                <button aria-label="Notifications" onClick={() => setShowNotifications((value) => !value)} className="icon-button relative"><Bell className="size-5" /><span className="absolute right-2 top-2 size-2 rounded-full bg-brand ring-2 ring-background" /></button>
-                {showNotifications && <div className="popover right-0 w-72"><p className="px-3 py-2 text-sm font-bold">Notifications</p><div className="border-t border-border p-3"><p className="text-sm font-semibold">4 inventory items need attention</p><p className="mt-1 text-xs text-muted-foreground">Review stock levels before tomorrow’s opening.</p></div></div>}
+                <button aria-label="Notifications" onClick={() => setShowNotifications((value) => !value)} className="icon-button relative"><Bell className="size-5" />{stockItems.length > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-brand ring-2 ring-background" />}</button>
+                {showNotifications && <div className="popover right-0 w-72"><p className="px-3 py-2 text-sm font-bold">Уведомления</p><div className="border-t border-border p-3"><p className="text-sm font-semibold">{stockItems.length} позиций с низким остатком</p><p className="mt-1 text-xs text-muted-foreground">Проверьте склад перед открытием магазинов.</p></div></div>}
               </div>
             </div>
           </div>
           <div className="flex gap-2 px-4 pb-3 sm:hidden">
-            <label className="relative flex-1"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search orders…" className="h-10 w-full rounded-md border border-input bg-muted/60 pl-10 pr-3 text-sm outline-none" /></label>
+            <label className="relative flex-1"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Поиск продаж…" className="h-10 w-full rounded-md border border-input bg-muted/60 pl-10 pr-3 text-sm outline-none" /></label>
           </div>
         </header>
 
         <div className="mx-auto max-w-[1600px] px-4 py-7 md:px-7 md:py-9">
           <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-            <div><p className="mb-1 text-sm font-semibold text-brand">Sunday, September 13</p><h1 className="font-display text-3xl font-extrabold md:text-4xl">Good afternoon, Oleksandr</h1><p className="mt-2 text-sm text-muted-foreground">Here’s what’s happening across {store.toLowerCase()} today.</p></div>
-            <button className="primary-button"><PackageCheck className="size-4" />Export report</button>
+            <div>
+              <p className="mb-1 text-sm font-semibold text-brand">{range.from && range.to ? `${range.from} — ${range.to}` : "Нет данных о продажах"}</p>
+              <h1 className="font-display text-3xl font-extrabold md:text-4xl">Продажи по {storeLabel}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{bounds ? `${bounds.sale_rows.toLocaleString("ru-RU")} записей продаж в базе` : "Загрузка данных…"}</p>
+            </div>
+            <Link to="/data" className="primary-button"><Database className="size-4" />Импорт данных</Link>
           </div>
 
+          {loadError && <div className="panel mb-5 border-destructive/40 text-sm text-destructive" role="alert">{loadError.message}</div>}
+          {empty && <div className="panel mb-5 text-sm text-muted-foreground">В базе пока нет продаж. Загрузите файлы на странице <Link to="/data" className="font-bold text-primary hover:underline">управления данными</Link>.</div>}
+
           <section aria-label="Key metrics" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard title="Total revenue" value="$284,920" change="12.4%" icon={<TrendingUp className="size-5" />} tone="coral">
-              <svg viewBox="0 0 116 36" className="h-9 w-28" role="img" aria-label="Revenue trending upward"><path d="M2 30 C15 26 19 29 29 21 S48 24 57 15 S75 20 85 10 S103 13 114 3" fill="none" stroke="var(--brand)" strokeWidth="3" strokeLinecap="round" /></svg>
+            <MetricCard title="Выручка" value={kpis ? money(Number(kpis.revenue)) : "—"} change={kpis ? growth(Number(kpis.revenue), Number(kpis.prev_revenue)) : "—"} icon={<TrendingUp className="size-5" />} tone="coral">
+              {sparkline.length > 1 && (
+                <div className="h-9 w-28">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={sparkline}><Line type="monotone" dataKey="value" stroke="var(--brand)" strokeWidth={2.5} dot={false} /></LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </MetricCard>
-            <MetricCard title="Total toys sold" value="18,642" change="8.7%" icon={<ShoppingBag className="size-5" />} tone="teal"><p className="text-xs text-muted-foreground">1,284 this week</p></MetricCard>
-            <MetricCard title="Active store locations" value="24" change="2 new" icon={<Store className="size-5" />} tone="blue"><p className="text-xs text-muted-foreground">Across 11 cities</p></MetricCard>
-            <MetricCard title="Top selling category" value="Building Sets" change="34%" icon={<Boxes className="size-5" />} tone="yellow"><p className="text-xs text-muted-foreground">of total sales</p></MetricCard>
+            <MetricCard title="Продано игрушек" value={kpis ? Number(kpis.units).toLocaleString("ru-RU") : "—"} change={kpis ? growth(Number(kpis.units), Number(kpis.prev_units)) : "—"} icon={<ShoppingBag className="size-5" />} tone="teal">
+              <p className="text-xs text-muted-foreground">{kpis ? `${Number(kpis.order_count).toLocaleString("ru-RU")} продаж` : ""}</p>
+            </MetricCard>
+            <MetricCard title="Активные магазины" value={kpis ? String(kpis.store_count) : "—"} change={kpis ? `${storesQuery.data?.length ?? 0} всего` : "—"} icon={<Store className="size-5" />} tone="blue">
+              <p className="text-xs text-muted-foreground">с продажами за период</p>
+            </MetricCard>
+            <MetricCard title="Топ категория" value={kpis?.top_category ?? "—"} change={kpis ? `${Number(kpis.top_category_share)}%` : "—"} icon={<Boxes className="size-5" />} tone="yellow">
+              <p className="text-xs text-muted-foreground">от общей выручки</p>
+            </MetricCard>
           </section>
 
           <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.75fr)_minmax(300px,0.75fr)]">
             <div className="panel min-w-0">
-              <div className="panel-heading"><div><h2>Sales trend</h2><p>Revenue performance against target</p></div><div className="segmented">{(["Daily", "Weekly", "Monthly"] as TrendPeriod[]).map((item) => <button key={item} onClick={() => setPeriod(item)} className={period === item ? "segmented-active" : ""}>{item}</button>)}</div></div>
+              <div className="panel-heading"><div><h2>Динамика продаж</h2><p>Выручка по данным из базы</p></div><div className="segmented">{(["Daily", "Weekly", "Monthly"] as TrendPeriod[]).map((item) => <button key={item} onClick={() => setPeriod(item)} className={period === item ? "segmented-active" : ""}>{item}</button>)}</div></div>
               <div className="mt-6 h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  {period === "Monthly" ? <BarChart data={trendData[period]} barGap={2}><CartesianGrid stroke="var(--chart-grid)" vertical={false} /><XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `$${v / 1000}k`} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} /><Tooltip content={<ChartTooltip />} /><Bar dataKey="target" fill="var(--chart-target)" radius={[4, 4, 0, 0]} /><Bar dataKey="sales" fill="var(--brand)" radius={[4, 4, 0, 0]} /></BarChart> : <AreaChart data={trendData[period]}><defs><linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--brand)" stopOpacity={0.24} /><stop offset="100%" stopColor="var(--brand)" stopOpacity={0} /></linearGradient></defs><CartesianGrid stroke="var(--chart-grid)" vertical={false} /><XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `$${v / 1000}k`} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} /><Tooltip content={<ChartTooltip />} /><Area type="monotone" dataKey="target" stroke="var(--chart-target)" strokeDasharray="5 5" fill="none" strokeWidth={2} /><Area type="monotone" dataKey="sales" stroke="var(--brand)" fill="url(#salesFill)" strokeWidth={3} /></AreaChart>}
-                </ResponsiveContainer>
+                {trendQuery.isPending ? (
+                  <div className="grid h-full place-items-center"><Loader2 className="size-6 animate-spin text-brand" /></div>
+                ) : trendChartData.length === 0 ? (
+                  <div className="grid h-full place-items-center text-sm text-muted-foreground">Нет данных за выбранный период</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    {period === "Monthly" ? (
+                      <BarChart data={trendChartData}><CartesianGrid stroke="var(--chart-grid)" vertical={false} /><XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tickFormatter={compactMoney} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} /><Tooltip content={<ChartTooltip />} /><Bar dataKey="sales" fill="var(--brand)" radius={[4, 4, 0, 0]} /></BarChart>
+                    ) : (
+                      <AreaChart data={trendChartData}><defs><linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--brand)" stopOpacity={0.24} /><stop offset="100%" stopColor="var(--brand)" stopOpacity={0} /></linearGradient></defs><CartesianGrid stroke="var(--chart-grid)" vertical={false} /><XAxis dataKey="label" axisLine={false} tickLine={false} interval="preserveStartEnd" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tickFormatter={compactMoney} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} /><Tooltip content={<ChartTooltip />} /><Area type="monotone" dataKey="sales" stroke="var(--brand)" fill="url(#salesFill)" strokeWidth={3} /></AreaChart>
+                    )}
+                  </ResponsiveContainer>
+                )}
               </div>
-              <div className="mt-3 flex justify-center gap-5 text-xs text-muted-foreground"><span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-brand" />Sales</span><span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-chart-target" />Target</span></div>
+              <div className="mt-3 flex justify-center gap-5 text-xs text-muted-foreground"><span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-brand" />Выручка</span></div>
             </div>
             <div className="panel">
-              <div className="panel-heading"><div><h2>Sales by category</h2><p>This month’s revenue mix</p></div><button aria-label="Category chart options" className="icon-button"><MoreHorizontal className="size-5" /></button></div>
-              <div className="relative mx-auto mt-5 h-48 max-w-60"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={categories} dataKey="value" innerRadius={58} outerRadius={82} paddingAngle={3} stroke="none">{categories.map((item) => <Cell key={item.name} fill={item.color} />)}</Pie><Tooltip formatter={(value) => [`${value}%`, "Share"]} /></PieChart></ResponsiveContainer><div className="pointer-events-none absolute inset-0 grid place-items-center text-center"><div><strong className="font-display text-2xl">$284.9K</strong><p className="text-xs text-muted-foreground">Total sales</p></div></div></div>
-              <div className="mt-4 space-y-3">{categories.map((category) => <div key={category.name} className="flex items-center gap-3 text-sm"><span className="size-2.5 rounded-sm" style={{ backgroundColor: category.color }} /><span className="flex-1 text-muted-foreground">{category.name}</span><strong>{category.value}%</strong></div>)}</div>
+              <div className="panel-heading"><div><h2>Продажи по категориям</h2><p>Структура выручки за период</p></div><button aria-label="Category chart options" className="icon-button"><MoreHorizontal className="size-5" /></button></div>
+              {categories.length === 0 ? (
+                <div className="grid h-48 place-items-center text-sm text-muted-foreground">{categoryQuery.isPending ? <Loader2 className="size-6 animate-spin text-brand" /> : "Нет данных"}</div>
+              ) : (
+                <>
+                  <div className="relative mx-auto mt-5 h-48 max-w-60">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart><Pie data={categories} dataKey="value" innerRadius={58} outerRadius={82} paddingAngle={3} stroke="none">{categories.map((item) => <Cell key={item.name} fill={item.color} />)}</Pie><Tooltip formatter={(value, name) => [`${value}%`, String(name)]} /></PieChart>
+                    </ResponsiveContainer>
+                    <div className="pointer-events-none absolute inset-0 grid place-items-center text-center"><div><strong className="font-display text-2xl">{kpis ? compactMoney(Number(kpis.revenue)) : "—"}</strong><p className="text-xs text-muted-foreground">Всего продаж</p></div></div>
+                  </div>
+                  <div className="mt-4 space-y-3">{categories.map((category) => <div key={category.name} className="flex items-center gap-3 text-sm"><span className="size-2.5 rounded-sm" style={{ backgroundColor: category.color }} /><span className="flex-1 truncate text-muted-foreground">{category.name}</span><strong>{category.value}%</strong></div>)}</div>
+                </>
+              )}
             </div>
           </section>
 
           <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.75fr)_minmax(320px,0.75fr)]">
             <div className="panel overflow-hidden p-0">
-              <div className="panel-heading border-b border-border p-5 md:p-6"><div><h2>Recent orders</h2><p>Latest purchases across your stores</p></div><div className="segmented">{(["All", "Completed", "Processing", "Pending"] as OrderStatus[]).map((item) => <button key={item} onClick={() => setStatus(item)} className={status === item ? "segmented-active" : ""}>{item}</button>)}</div></div>
+              <div className="panel-heading border-b border-border p-5 md:p-6"><div><h2>Последние продажи</h2><p>Свежие записи из базы</p></div></div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground"><th>Order</th><th>Customer</th><th>Store</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>{visibleOrders.map((order) => <tr key={order.id} className="border-b border-border last:border-0 hover:bg-muted/30"><td className="font-bold">{order.id}</td><td><div className="flex items-center gap-2"><span className="grid size-8 place-items-center rounded-full bg-muted text-[11px] font-bold">{order.initials}</span>{order.customer}</div></td><td className="text-muted-foreground">{order.store}</td><td>{order.items}</td><td className="font-semibold">{order.total}</td><td><span className={`status status-${order.status.toLowerCase()}`}>{order.status}</span></td><td className="text-muted-foreground">{order.date}</td></tr>)}</tbody></table>
-                {visibleOrders.length === 0 && <div className="py-12 text-center text-sm text-muted-foreground">No matching orders found.</div>}
+                <table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground"><th>№</th><th>Товар</th><th>Категория</th><th>Магазин</th><th>Кол-во</th><th>Сумма</th><th>Дата</th></tr></thead><tbody>{(salesQuery.data ?? []).map((sale) => <tr key={sale.sale_id} className="border-b border-border last:border-0 hover:bg-muted/30"><td className="font-bold">#{sale.sale_id}</td><td>{sale.product_name}</td><td className="text-muted-foreground">{sale.product_category}</td><td className="text-muted-foreground">{sale.store_name} · {sale.store_city}</td><td>{sale.units}</td><td className="font-semibold">{money(Number(sale.total))}</td><td className="text-muted-foreground">{sale.sale_date}</td></tr>)}</tbody></table>
+                {salesQuery.isPending && <div className="grid py-12 place-items-center"><Loader2 className="size-6 animate-spin text-brand" /></div>}
+                {!salesQuery.isPending && (salesQuery.data ?? []).length === 0 && <div className="py-12 text-center text-sm text-muted-foreground">Продажи не найдены.</div>}
               </div>
-              <div className="flex items-center justify-between border-t border-border px-5 py-4 text-sm"><span className="text-muted-foreground">Showing {visibleOrders.length} of {orders.length} orders</span><button className="font-bold text-primary hover:underline">View all orders</button></div>
+              <div className="flex items-center justify-between border-t border-border px-5 py-4 text-sm"><span className="text-muted-foreground">Показано {(salesQuery.data ?? []).length} из {bounds?.sale_rows.toLocaleString("ru-RU") ?? "—"}</span><Link to="/data" className="font-bold text-primary hover:underline">Все продажи</Link></div>
             </div>
 
             <div className="panel p-0">
-              <div className="panel-heading border-b border-border p-5 md:p-6"><div><div className="flex items-center gap-2"><h2>Low stock</h2>{stockItems.length > 0 && <span className="rounded-full bg-destructive-soft px-2 py-0.5 text-xs font-bold text-destructive">{stockItems.length}</span>}</div><p>Items that need your attention</p></div></div>
-              <div className="divide-y divide-border">{stockItems.map((item) => <div key={item.sku} className="flex items-center gap-3 p-4"><div className={`stock-thumb stock-${item.color}`}><PackageOpen className="size-5" /></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{item.name}</p><p className="text-xs text-muted-foreground">{item.sku} · <span className="font-semibold text-destructive">{item.left} left</span></p></div><button onClick={() => setRestocked((items) => [...items, item.sku])} className="secondary-button">Restock</button></div>)}{stockItems.length === 0 && <div className="px-5 py-12 text-center"><PackageCheck className="mx-auto size-8 text-success" /><p className="mt-3 text-sm font-bold">Inventory looks healthy</p><p className="mt-1 text-xs text-muted-foreground">All alerts have been handled.</p></div>}</div>
-              {stockItems.length > 0 && <div className="border-t border-border p-4"><button className="w-full text-sm font-bold text-primary hover:underline">Open inventory</button></div>}
+              <div className="panel-heading border-b border-border p-5 md:p-6"><div><div className="flex items-center gap-2"><h2>Низкий остаток</h2>{stockItems.length > 0 && <span className="rounded-full bg-destructive-soft px-2 py-0.5 text-xs font-bold text-destructive">{stockItems.length}</span>}</div><p>Остаток 10 штук и меньше</p></div></div>
+              <div className="divide-y divide-border">
+                {stockItems.map((item, index) => (
+                  <div key={`${item.store_id}-${item.product_id}`} className="flex items-center gap-3 p-4">
+                    <div className={`stock-thumb stock-${toneByIndex[index % toneByIndex.length]}`}><PackageOpen className="size-5" /></div>
+                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{item.product_name}</p><p className="truncate text-xs text-muted-foreground">{item.store_name} · <span className="font-semibold text-destructive">{item.stock_on_hand} шт.</span></p></div>
+                    <button onClick={() => setRestocked((items) => [...items, `${item.store_id}-${item.product_id}`])} className="secondary-button">Пополнить</button>
+                  </div>
+                ))}
+                {stockQuery.isPending && <div className="grid py-12 place-items-center"><Loader2 className="size-6 animate-spin text-brand" /></div>}
+                {!stockQuery.isPending && stockItems.length === 0 && <div className="px-5 py-12 text-center"><PackageCheck className="mx-auto size-8 text-success" /><p className="mt-3 text-sm font-bold">Остатки в норме</p><p className="mt-1 text-xs text-muted-foreground">Все оповещения обработаны.</p></div>}
+              </div>
             </div>
           </section>
         </div>
@@ -238,10 +418,19 @@ function Dashboard() {
 }
 
 function MetricCard({ title, value, change, icon, tone, children }: { title: string; value: string; change: string; icon: React.ReactNode; tone: string; children: React.ReactNode }) {
-  return <article className="metric-card"><div className="flex items-start justify-between"><div><p className="text-sm font-semibold text-muted-foreground">{title}</p><p className="mt-2 font-display text-2xl font-extrabold">{value}</p></div><span className={`metric-icon metric-${tone}`}>{icon}</span></div><div className="mt-5 flex min-h-9 items-end justify-between gap-3"><div><span className="text-xs font-bold text-success">↑ {change}</span><span className="ml-1 text-xs text-muted-foreground">vs last period</span></div>{children}</div></article>;
+  const negative = change.startsWith("-");
+  const showChange = change !== "—";
+  return <article className="metric-card"><div className="flex items-start justify-between"><div><p className="text-sm font-semibold text-muted-foreground">{title}</p><p className="mt-2 font-display text-2xl font-extrabold">{value}</p></div><span className={`metric-icon metric-${tone}`}>{icon}</span></div><div className="mt-5 flex min-h-9 items-end justify-between gap-3"><div>{showChange && <><span className={`text-xs font-bold ${negative ? "text-destructive" : "text-success"}`}>{negative ? "↓" : "↑"} {change.replace("-", "")}</span><span className="ml-1 text-xs text-muted-foreground">vs пред. период</span></>}</div>{children}</div></article>;
 }
 
-function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string; payload?: { units?: number } }>; label?: string }) {
   if (!active || !payload?.length) return null;
-  return <div className="rounded-md border border-border bg-popover p-3 text-xs shadow-lg"><p className="mb-2 font-bold">{label}</p>{payload.map((item) => <p key={item.name} style={{ color: item.color }} className="font-semibold capitalize">{item.name}: ${item.value.toLocaleString()}</p>)}</div>;
+  const units = payload[0]?.payload?.units;
+  return (
+    <div className="rounded-md border border-border bg-popover p-3 text-xs shadow-lg">
+      <p className="mb-2 font-bold">{label}</p>
+      {payload.map((item) => <p key={item.name} style={{ color: item.color }} className="font-semibold">Выручка: {money(Number(item.value))}</p>)}
+      {typeof units === "number" && <p className="mt-1 text-muted-foreground">Продано: {units.toLocaleString("ru-RU")} шт.</p>}
+    </div>
+  );
 }
