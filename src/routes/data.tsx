@@ -59,7 +59,7 @@ const configs: Record<TableName, { title: string; file: string; description: str
     title: "Продажи", file: "sales.csv", description: "Продажи по датам, магазинам и товарам",
     key: "sale_id", conflict: "sale_id",
     fields: [
-      { key: "sale_id", label: "Sale ID", type: "number" }, { key: "sale_date", label: "Дата", type: "date" },
+      { key: "sale_id", label: "Sale ID", type: "number" }, { key: "sale_date", label: "Дата", type: "date", aliases: ["date"] },
       { key: "store_id", label: "Store ID", type: "number" }, { key: "product_id", label: "Product ID", type: "number" },
       { key: "units", label: "Количество", type: "number" },
     ],
