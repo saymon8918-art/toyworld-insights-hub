@@ -419,7 +419,8 @@ function Dashboard() {
 
 function MetricCard({ title, value, change, icon, tone, children }: { title: string; value: string; change: string; icon: React.ReactNode; tone: string; children: React.ReactNode }) {
   const negative = change.startsWith("-");
-  return <article className="metric-card"><div className="flex items-start justify-between"><div><p className="text-sm font-semibold text-muted-foreground">{title}</p><p className="mt-2 font-display text-2xl font-extrabold">{value}</p></div><span className={`metric-icon metric-${tone}`}>{icon}</span></div><div className="mt-5 flex min-h-9 items-end justify-between gap-3"><div><span className={`text-xs font-bold ${negative ? "text-destructive" : "text-success"}`}>{negative ? "↓" : "↑"} {change.replace("-", "")}</span><span className="ml-1 text-xs text-muted-foreground">vs пред. период</span></div>{children}</div></article>;
+  const showChange = change !== "—";
+  return <article className="metric-card"><div className="flex items-start justify-between"><div><p className="text-sm font-semibold text-muted-foreground">{title}</p><p className="mt-2 font-display text-2xl font-extrabold">{value}</p></div><span className={`metric-icon metric-${tone}`}>{icon}</span></div><div className="mt-5 flex min-h-9 items-end justify-between gap-3"><div>{showChange && <><span className={`text-xs font-bold ${negative ? "text-destructive" : "text-success"}`}>{negative ? "↓" : "↑"} {change.replace("-", "")}</span><span className="ml-1 text-xs text-muted-foreground">vs пред. период</span></>}</div>{children}</div></article>;
 }
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string; payload?: { units?: number } }>; label?: string }) {
