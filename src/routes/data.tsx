@@ -150,7 +150,7 @@ function DataPage() {
       await refresh();
       setMessage({ text: `Импортировано ${rows.length.toLocaleString("ru-RU")} строк. Удалено дублей: ${(parsed.length - rows.length).toLocaleString("ru-RU")}.` });
     } catch (error) {
-      setMessage({ text: error instanceof Error ? error.message : "Не удалось импортировать файл.", error: true });
+      setMessage({ text: describeError(error, "Не удалось импортировать файл."), error: true });
     } finally {
       setBusy(false);
       const input = fileRefs.current[target];
@@ -168,7 +168,7 @@ function DataPage() {
       if (error) throw error;
       setEditor(null); await refresh(); setMessage({ text: "Запись сохранена." });
     } catch (error) {
-      setMessage({ text: error instanceof Error ? error.message : "Не удалось сохранить запись.", error: true });
+      setMessage({ text: describeError(error, "Не удалось сохранить запись."), error: true });
     } finally { setBusy(false); }
   }
 
@@ -194,7 +194,7 @@ function DataPage() {
       if (error) throw error;
       setDeleteTarget(null); setPage(0); await refresh(); setMessage({ text: deleteTarget === "all" ? "Все записи удалены." : "Запись удалена." });
     } catch (error) {
-      setMessage({ text: error instanceof Error ? error.message : "Не удалось удалить данные.", error: true });
+      setMessage({ text: describeError(error, "Не удалось удалить данные."), error: true });
       setDeleteTarget(null);
     } finally { setBusy(false); }
   }
@@ -270,6 +270,22 @@ async function loadRows(table: TableName, page: number, search: string): Promise
   const { data, count, error } = await query.order(configs[table].key, { ascending: true }).range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
   if (error) throw error;
   return { rows: (data ?? []) as DataRow[], count: count ?? 0 };
+}
+
+function describeError(error: unknown, fallback: string): string {
+  const message = error instanceof Error ? error.message
+    : typeof error === "object" && error !== null && "message" in error && typeof (error as { message: unknown }).message === "string"
+      ? (error as { message: string }).message
+      : null;
+  if (!message) return fallback;
+  const lower = message.toLowerCase();
+  if (lower.includes("foreign key") || lower.includes("violates foreign key constraint") || lower.includes("is not present in table")) {
+    if (lower.includes("sales")) return "Продажи ссылаются на магазин или товар, которого нет в базе. Сначала импортируйте stores.csv и products.csv, затем sales.csv.";
+    if (lower.includes("inventory")) return "Остатки ссылаются на магазин или товар, которого нет в базе. Сначала импортируйте stores.csv и products.csv, затем inventory.csv.";
+    return `Связанная запись не найдена: ${message}`;
+  }
+  if (lower.includes("row-level security")) return "Нет доступа к таблице. Проверьте правила доступа в базе.";
+  return message;
 }
 
 function parseCsv(text: string, table: TableName): DataRow[] {
