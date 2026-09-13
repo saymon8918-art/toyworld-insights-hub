@@ -28,8 +28,8 @@ export const chartColors = [
   "var(--chart-teal)",
   "var(--chart-yellow)",
   "var(--chart-blue)",
-  "var(--brand)",
-  "var(--chart-grid)",
+  "var(--chart-violet)",
+  "var(--chart-lime)",
 ];
 
 export type StoreOption = { store_id: number; store_name: string; store_city: string };

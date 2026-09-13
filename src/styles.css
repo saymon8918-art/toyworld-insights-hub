@@ -118,6 +118,8 @@
   --chart-blue: oklch(0.61 0.11 245);
   --chart-grid: oklch(0.9 0.012 80);
   --chart-target: oklch(0.75 0.018 252);
+  --chart-violet: oklch(0.55 0.14 300);
+  --chart-lime: oklch(0.7 0.14 130);
 }
 
 .dark {
