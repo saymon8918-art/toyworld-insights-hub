@@ -253,15 +253,21 @@ function Dashboard() {
           <button aria-label="Close navigation" onClick={() => setMobileNav(false)} className="icon-button text-sidebar-muted lg:hidden"><X className="size-5" /></button>
         </div>
         <nav aria-label="Primary navigation" className="flex-1 space-y-1 px-3 py-6">
+          <button title={collapsed ? "Обзор" : undefined} className="nav-item nav-item-active">
+            <LayoutDashboard className="size-5 shrink-0" />{!collapsed && <span>Обзор</span>}
+          </button>
           {[
-            { label: "Overview", icon: LayoutDashboard }, { label: "Orders", icon: ShoppingBag },
-            { label: "Inventory", icon: Boxes }, { label: "Products", icon: PackageOpen },
-            { label: "Customers", icon: Users }, { label: "Store locations", icon: Store },
-          ].map(({ label, icon: Icon }, index) => (
-            <button key={label} title={collapsed ? label : undefined} className={`nav-item ${index === 0 ? "nav-item-active" : ""}`}>
-              <Icon className="size-5 shrink-0" />{!collapsed && <span>{label}</span>}
-            </button>
+            { label: "Прибыль по категориям", to: "/profit" as const, icon: TrendingUp },
+            { label: "Наличие и потери", to: "/availability" as const, icon: PackageOpen },
+            { label: "Деньги в запасах", to: "/inventory" as const, icon: Boxes },
+          ].map(({ label, to, icon: Icon }) => (
+            <Link key={to} to={to} title={collapsed ? label : undefined} className="nav-item">
+              <Icon className="size-5 shrink-0" />{!collapsed && <span className="truncate">{label}</span>}
+            </Link>
           ))}
+          <button title={collapsed ? "Магазины" : undefined} className="nav-item">
+            <Store className="size-5 shrink-0" />{!collapsed && <span>Магазины</span>}
+          </button>
           <p className={`px-3 pb-2 pt-7 text-[10px] font-bold uppercase text-sidebar-muted ${collapsed ? "invisible" : ""}`}>Workspace</p>
           <Link to="/data" title={collapsed ? "Data manager" : undefined} className="nav-item"><Database className="size-5 shrink-0" />{!collapsed && <span>Data manager</span>}</Link>
           <button title={collapsed ? "Settings" : undefined} className="nav-item"><Settings className="size-5 shrink-0" />{!collapsed && <span>Settings</span>}</button>
