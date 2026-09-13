@@ -176,15 +176,21 @@ function DataPage() {
     if (!deleteTarget) return;
     setBusy(true); setMessage(null);
     try {
-      let request = supabase.from(table).delete();
+      let error: { message: string } | null = null;
       if (deleteTarget === "all") {
-        request = request.not(config.key, "is", null);
+        if (table === "products") ({ error } = await supabase.from("products").delete().not("product_id", "is", null));
+        else if (table === "sales") ({ error } = await supabase.from("sales").delete().not("sale_id", "is", null));
+        else if (table === "stores") ({ error } = await supabase.from("stores").delete().not("store_id", "is", null));
+        else ({ error } = await supabase.from("inventory").delete().not("store_id", "is", null));
       } else if (table === "inventory") {
-        request = request.eq("store_id", Number(deleteTarget.store_id)).eq("product_id", Number(deleteTarget.product_id));
+        ({ error } = await supabase.from("inventory").delete().eq("store_id", Number(deleteTarget["store_id"])).eq("product_id", Number(deleteTarget["product_id"])));
+      } else if (table === "products") {
+        ({ error } = await supabase.from("products").delete().eq("product_id", Number(deleteTarget["product_id"])));
+      } else if (table === "sales") {
+        ({ error } = await supabase.from("sales").delete().eq("sale_id", Number(deleteTarget["sale_id"])));
       } else {
-        request = request.eq(config.key, Number(deleteTarget[config.key]));
+        ({ error } = await supabase.from("stores").delete().eq("store_id", Number(deleteTarget["store_id"])));
       }
-      const { error } = await request;
       if (error) throw error;
       setDeleteTarget(null); setPage(0); await refresh(); setMessage({ text: deleteTarget === "all" ? "Все записи удалены." : "Запись удалена." });
     } catch (error) {
@@ -269,10 +275,14 @@ async function loadRows(table: TableName, page: number, search: string): Promise
 function parseCsv(text: string, table: TableName): DataRow[] {
   const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
   if (lines.length < 2) throw new Error("Файл пуст или не содержит строк данных.");
-  const delimiter = lines[0].includes(";") ? ";" : ",";
+  const firstLine = lines[0];
+  if (!firstLine) throw new Error("Файл не содержит заголовков.");
+  const delimiter = firstLine.includes(";") ? ";" : ",";
   const matrix = lines.map((line) => splitCsvLine(line, delimiter));
   const expected = configs[table].fields.map((field) => field.key);
-  const headers = matrix[0].map((header) => header.trim().toLowerCase());
+  const headerRow = matrix[0];
+  if (!headerRow) throw new Error("Файл не содержит заголовков.");
+  const headers = headerRow.map((header) => header.trim().toLowerCase());
   const missing = expected.filter((field) => !headers.includes(field));
   if (missing.length) throw new Error(`Не найдены столбцы: ${missing.join(", ")}`);
   return matrix.slice(1).map((values, index) => {
@@ -306,12 +316,12 @@ function normalizeRow(row: DataRow, table: TableName): DataRow {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(raw) || Number.isNaN(Date.parse(raw))) throw new Error(`${field.label}: используйте формат YYYY-MM-DD`); result[field.key] = raw;
     } else result[field.key] = raw;
   }
-  if (table === "sales" && Number(result.units) < 1) throw new Error("Количество должно быть больше нуля");
+  if (table === "sales" && Number(result["units"]) < 1) throw new Error("Количество должно быть больше нуля");
   return result;
 }
 
 function rowKey(row: DataRow, table: TableName, fallback: number) {
-  return table === "inventory" ? `${row.store_id}-${row.product_id}` : String(row[configs[table].key] ?? fallback);
+  return table === "inventory" ? `${row["store_id"]}-${row["product_id"]}` : String(row[configs[table].key] ?? fallback);
 }
 
 function formatValue(value: string | number | undefined, type: Field["type"]) {
