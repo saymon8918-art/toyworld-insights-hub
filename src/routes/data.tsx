@@ -41,7 +41,7 @@ import {
 
 type TableName = "products" | "sales" | "stores" | "inventory";
 type DataRow = Record<string, string | number>;
-type Field = { key: string; label: string; type: "text" | "number" | "date" | "money" };
+type Field = { key: string; label: string; type: "text" | "number" | "date" | "money"; aliases?: string[] };
 
 const PAGE_SIZE = 100;
 
@@ -59,7 +59,7 @@ const configs: Record<TableName, { title: string; file: string; description: str
     title: "Продажи", file: "sales.csv", description: "Продажи по датам, магазинам и товарам",
     key: "sale_id", conflict: "sale_id",
     fields: [
-      { key: "sale_id", label: "Sale ID", type: "number" }, { key: "sale_date", label: "Дата", type: "date" },
+      { key: "sale_id", label: "Sale ID", type: "number" }, { key: "sale_date", label: "Дата", type: "date", aliases: ["date"] },
       { key: "store_id", label: "Store ID", type: "number" }, { key: "product_id", label: "Product ID", type: "number" },
       { key: "units", label: "Количество", type: "number" },
     ],
@@ -282,7 +282,15 @@ function parseCsv(text: string, table: TableName): DataRow[] {
   const expected = configs[table].fields.map((field) => field.key);
   const headerRow = matrix[0];
   if (!headerRow) throw new Error("Файл не содержит заголовков.");
-  const headers = headerRow.map((header) => header.trim().toLowerCase());
+  const aliasMap = new Map<string, string>();
+  for (const field of configs[table].fields) {
+    aliasMap.set(field.key.toLowerCase(), field.key);
+    for (const alias of field.aliases ?? []) aliasMap.set(alias.toLowerCase(), field.key);
+  }
+  const headers = headerRow.map((header) => {
+    const normalized = header.trim().toLowerCase();
+    return aliasMap.get(normalized) ?? normalized;
+  });
   const missing = expected.filter((field) => !headers.includes(field));
   if (missing.length) throw new Error(`Не найдены столбцы: ${missing.join(", ")}`);
   return matrix.slice(1).map((values, index) => {
