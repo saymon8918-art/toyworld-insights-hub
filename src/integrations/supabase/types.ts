@@ -163,7 +163,74 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      dashboard_category_sales: {
+        Args: { p_from?: string; p_store_id?: number; p_to?: string }
+        Returns: {
+          category: string
+          revenue: number
+          units: number
+        }[]
+      }
+      dashboard_date_bounds: {
+        Args: never
+        Returns: {
+          max_date: string
+          min_date: string
+          sale_rows: number
+        }[]
+      }
+      dashboard_kpis: {
+        Args: { p_from?: string; p_store_id?: number; p_to?: string }
+        Returns: {
+          order_count: number
+          prev_revenue: number
+          prev_units: number
+          revenue: number
+          store_count: number
+          top_category: string
+          top_category_share: number
+          units: number
+        }[]
+      }
+      dashboard_low_stock: {
+        Args: { p_limit?: number; p_store_id?: number; p_threshold?: number }
+        Returns: {
+          product_category: string
+          product_id: number
+          product_name: string
+          stock_on_hand: number
+          store_city: string
+          store_id: number
+          store_name: string
+        }[]
+      }
+      dashboard_recent_sales: {
+        Args: { p_limit?: number; p_search?: string; p_store_id?: number }
+        Returns: {
+          product_category: string
+          product_name: string
+          sale_date: string
+          sale_id: number
+          store_city: string
+          store_name: string
+          total: number
+          units: number
+        }[]
+      }
+      dashboard_sales_trend: {
+        Args: {
+          p_from?: string
+          p_grain?: string
+          p_store_id?: number
+          p_to?: string
+        }
+        Returns: {
+          bucket: string
+          label: string
+          sales: number
+          units: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
