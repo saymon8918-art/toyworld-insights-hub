@@ -91,15 +91,17 @@ const rangeLabels: Record<RangeKey, string> = {
 const donutColors = ["var(--chart-coral)", "var(--chart-teal)", "var(--chart-yellow)", "var(--chart-blue)", "var(--brand)"];
 const toneByIndex = ["coral", "teal", "yellow", "blue"];
 
+type RpcClient = {
+  rpc: (fn: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+};
+
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T[]> {
-  const call = supabase.rpc as unknown as (
-    fn: string,
-    params: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: { message: string } | null }>;
-  const { data, error } = await call(name, args);
+  const client = supabase as unknown as RpcClient;
+  const { data, error } = await client.rpc(name, args);
   if (error) throw new Error(error.message);
   return (data ?? []) as T[];
 }
+
 
 const money = (value: number) =>
   `$${Math.round(value).toLocaleString("en-US")}`;
