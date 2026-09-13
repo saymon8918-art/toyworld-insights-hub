@@ -41,7 +41,7 @@ import {
 
 type TableName = "products" | "sales" | "stores" | "inventory";
 type DataRow = Record<string, string | number>;
-type Field = { key: string; label: string; type: "text" | "number" | "date" | "money" };
+type Field = { key: string; label: string; type: "text" | "number" | "date" | "money"; aliases?: string[] };
 
 const PAGE_SIZE = 100;
 
