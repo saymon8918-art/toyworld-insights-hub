@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   Area,
@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleHelp,
+  Database,
   LayoutDashboard,
   MapPin,
   Menu,
@@ -140,6 +141,7 @@ function Dashboard() {
             </button>
           ))}
           <p className={`px-3 pb-2 pt-7 text-[10px] font-bold uppercase text-sidebar-muted ${collapsed ? "invisible" : ""}`}>Workspace</p>
+          <Link to="/data" title={collapsed ? "Data manager" : undefined} className="nav-item"><Database className="size-5 shrink-0" />{!collapsed && <span>Data manager</span>}</Link>
           <button title={collapsed ? "Settings" : undefined} className="nav-item"><Settings className="size-5 shrink-0" />{!collapsed && <span>Settings</span>}</button>
           <button title={collapsed ? "Help center" : undefined} className="nav-item"><CircleHelp className="size-5 shrink-0" />{!collapsed && <span>Help center</span>}</button>
         </nav>
