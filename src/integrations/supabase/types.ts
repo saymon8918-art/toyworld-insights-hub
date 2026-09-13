@@ -163,6 +163,208 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      analytics_assortment_gaps: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: {
+          category: string
+          chain_daily_units: number
+          est_revenue_week: number
+          product_id: number
+          product_name: string
+          store_city: string
+          store_id: number
+          store_name: string
+          stores_selling: number
+        }[]
+      }
+      analytics_availability_summary: {
+        Args: { p_days?: number; p_store_id?: number }
+        Returns: {
+          affected_stores: number
+          at_risk: number
+          availability_pct: number
+          lost_profit_week: number
+          lost_revenue_week: number
+          lost_units_week: number
+          out_of_stock: number
+          tracked_pairs: number
+        }[]
+      }
+      analytics_category_profit: {
+        Args: { p_from?: string; p_store_id?: number; p_to?: string }
+        Returns: {
+          category: string
+          cost: number
+          margin_pct: number
+          profit: number
+          profit_share: number
+          revenue: number
+          sku_count: number
+          units: number
+        }[]
+      }
+      analytics_cover_buckets: {
+        Args: { p_days?: number; p_store_id?: number }
+        Returns: {
+          bucket: string
+          cost_value: number
+          share_pct: number
+          sku_rows: number
+          sort_order: number
+          units: number
+        }[]
+      }
+      analytics_inventory_by_category: {
+        Args: { p_days?: number; p_store_id?: number }
+        Returns: {
+          category: string
+          cost_value: number
+          daily_cost_burn: number
+          days_cover: number
+          retail_value: number
+          share_pct: number
+          units: number
+        }[]
+      }
+      analytics_inventory_by_store: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: {
+          cost_value: number
+          daily_cost_burn: number
+          days_cover: number
+          dead_cost_value: number
+          store_city: string
+          store_id: number
+          store_location: string
+          store_name: string
+          units: number
+        }[]
+      }
+      analytics_inventory_summary: {
+        Args: { p_days?: number; p_store_id?: number }
+        Returns: {
+          cost_value: number
+          daily_cost_burn: number
+          days_cover: number
+          dead_cost_value: number
+          dead_rows: number
+          locked_profit: number
+          retail_value: number
+          sku_rows: number
+          units: number
+        }[]
+      }
+      analytics_location_category_profit: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: {
+          category: string
+          profit: number
+          revenue: number
+          share_pct: number
+          store_count: number
+          store_location: string
+        }[]
+      }
+      analytics_lost_by_category: {
+        Args: { p_days?: number }
+        Returns: {
+          category: string
+          loss_ratio_pct: number
+          lost_revenue_week: number
+          lost_units_week: number
+          out_of_stock: number
+          revenue_week: number
+        }[]
+      }
+      analytics_product_profit: {
+        Args: {
+          p_from?: string
+          p_limit?: number
+          p_store_id?: number
+          p_to?: string
+        }
+        Returns: {
+          category: string
+          margin_pct: number
+          product_id: number
+          product_name: string
+          profit: number
+          revenue: number
+          units: number
+        }[]
+      }
+      analytics_profit_summary: {
+        Args: { p_from?: string; p_store_id?: number; p_to?: string }
+        Returns: {
+          cost: number
+          margin_pct: number
+          profit: number
+          revenue: number
+          store_count: number
+          units: number
+        }[]
+      }
+      analytics_slow_movers: {
+        Args: { p_days?: number; p_limit?: number; p_store_id?: number }
+        Returns: {
+          category: string
+          cost_value: number
+          daily_units: number
+          days_cover: number
+          product_id: number
+          product_name: string
+          stock_on_hand: number
+          store_city: string
+          store_id: number
+          store_name: string
+        }[]
+      }
+      analytics_stockout_items: {
+        Args: { p_days?: number; p_limit?: number; p_store_id?: number }
+        Returns: {
+          category: string
+          daily_units: number
+          days_cover: number
+          lost_revenue_week: number
+          lost_units_week: number
+          product_id: number
+          product_name: string
+          stock_on_hand: number
+          store_city: string
+          store_id: number
+          store_name: string
+        }[]
+      }
+      analytics_store_availability: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: {
+          availability_pct: number
+          loss_ratio_pct: number
+          lost_revenue_week: number
+          out_of_stock: number
+          revenue_week: number
+          store_city: string
+          store_id: number
+          store_location: string
+          store_name: string
+          tracked_pairs: number
+        }[]
+      }
+      analytics_store_category_profit: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: {
+          category: string
+          profit: number
+          revenue: number
+          share_pct: number
+          store_city: string
+          store_id: number
+          store_location: string
+          store_name: string
+          store_profit: number
+          units: number
+        }[]
+      }
       dashboard_category_sales: {
         Args: { p_from?: string; p_store_id?: number; p_to?: string }
         Returns: {
