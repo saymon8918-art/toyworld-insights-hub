@@ -150,7 +150,7 @@ function DataPage() {
       await refresh();
       setMessage({ text: `Импортировано ${rows.length.toLocaleString("ru-RU")} строк. Удалено дублей: ${(parsed.length - rows.length).toLocaleString("ru-RU")}.` });
     } catch (error) {
-      setMessage({ text: error instanceof Error ? error.message : "Не удалось импортировать файл.", error: true });
+      setMessage({ text: describeError(error, "Не удалось импортировать файл."), error: true });
     } finally {
       setBusy(false);
       const input = fileRefs.current[target];
