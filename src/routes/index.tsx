@@ -343,7 +343,7 @@ function Dashboard() {
               )}
             </MetricCard>
             <MetricCard title="Units Sold" value={kpis ? Number(kpis.units).toLocaleString("en-US") : "—"} change={kpis ? growth(Number(kpis.units), Number(kpis.prev_units)) : "—"} icon={<ShoppingBag className="size-5" />} tone="teal">
-              <p className="text-xs text-muted-foreground">{kpis ? `${Number(kpis.order_count).toLocaleString("en-US")} продаж` : ""}</p>
+              <p className="text-xs text-muted-foreground">{kpis ? `${Number(kpis.order_count).toLocaleString("en-US")} orders` : ""}</p>
             </MetricCard>
             <MetricCard title="Active Stores" value={kpis ? String(kpis.store_count) : "—"} change={kpis ? `${storesQuery.data?.length ?? 0} total` : "—"} icon={<Store className="size-5" />} tone="blue">
               <p className="text-xs text-muted-foreground">with sales in period</p>
@@ -355,7 +355,7 @@ function Dashboard() {
 
           <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.75fr)_minmax(300px,0.75fr)]">
             <div className="panel min-w-0">
-              <div className="panel-heading"><div><h2>Sales Dynamics</h2><p>Revenue по данным of базы</p></div><div className="segmented">{(["Daily", "Weekly", "Monthly"] as TrendPeriod[]).map((item) => <button key={item} onClick={() => setPeriod(item)} className={period === item ? "segmented-active" : ""}>{item}</button>)}</div></div>
+              <div className="panel-heading"><div><h2>Sales Dynamics</h2><p>Revenue trend from database</p></div><div className="segmented">{(["Daily", "Weekly", "Monthly"] as TrendPeriod[]).map((item) => <button key={item} onClick={() => setPeriod(item)} className={period === item ? "segmented-active" : ""}>{item}</button>)}</div></div>
               <div className="mt-6 h-72">
                 {trendQuery.isPending ? (
                   <div className="grid h-full place-items-center"><Loader2 className="size-6 animate-spin text-brand" /></div>
@@ -374,7 +374,7 @@ function Dashboard() {
               <div className="mt-3 flex justify-center gap-5 text-xs text-muted-foreground"><span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-brand" />Revenue</span></div>
             </div>
             <div className="panel">
-              <div className="panel-heading"><div><h2>Sales by категориям</h2><p>Revenue breakdown for period</p></div><button aria-label="Category chart options" className="icon-button"><MoreHorizontal className="size-5" /></button></div>
+              <div className="panel-heading"><div><h2>Sales by Categories</h2><p>Revenue breakdown for period</p></div><button aria-label="Category chart options" className="icon-button"><MoreHorizontal className="size-5" /></button></div>
               {categories.length === 0 ? (
                 <div className="grid h-48 place-items-center text-sm text-muted-foreground">{categoryQuery.isPending ? <Loader2 className="size-6 animate-spin text-brand" /> : "No data"}</div>
               ) : (
