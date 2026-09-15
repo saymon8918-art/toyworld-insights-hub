@@ -44,19 +44,19 @@ type SlowRow = {
 };
 
 const windows = [
-  { key: 14, label: "14 дней" },
-  { key: 28, label: "28 дней" },
-  { key: 56, label: "56 дней" },
+  { key: 14, label: "14 days" },
+  { key: 28, label: "28 days" },
+  { key: 56, label: "56 days" },
 ] as const;
 
 export const Route = createFileRoute("/inventory")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Деньги в запасах и срок покрытия — ToyWorld" },
-      { name: "description", content: "Сколько денег заморожено в запасах магазинов игрушек и на какой срок этих запасов хватит при текущем спросе." },
-      { property: "og:title", content: "Деньги в запасах и срок покрытия — ToyWorld" },
-      { property: "og:description", content: "Стоимость запасов по себестоимости и в рознице, срок покрытия и мёртвый запас по магазинам." },
+      { title: "Cash in inventory & days of cover — ToyWorld" },
+      { name: "description", content: "How much cash is tied up in toy store inventory and how long that stock will last at current demand." },
+      { property: "og:title", content: "Cash in inventory & days of cover — ToyWorld" },
+      { property: "og:description", content: "Inventory value at cost and retail, days of cover and dead stock by store." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -70,12 +70,12 @@ export const Route = createFileRoute("/inventory")({
   errorComponent: ({ error }) => (
     <div className="grid min-h-screen place-items-center p-6">
       <div className="panel max-w-md text-center" role="alert">
-        <h2 className="font-display text-xl font-extrabold">Не удалось загрузить данные</h2>
+        <h2 className="font-display text-xl font-extrabold">Could not load data</h2>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
       </div>
     </div>
   ),
-  notFoundComponent: () => <div className="p-10 text-center">Страница не найдена.</div>,
+  notFoundComponent: () => <div className="p-10 text-center">Page not found.</div>,
 });
 
 function InventoryPage() {
@@ -110,15 +110,15 @@ function InventoryPage() {
 
   return (
     <AppShell
-      eyebrow="Вопросы 3 и 4"
-      title="Сколько денег заморожено в запасах и на сколько их хватит?"
-      subtitle={`Запас оценён по себестоимости и по розничным ценам. Срок покрытия = стоимость запаса, делённая на среднесуточное списание за последние ${windowDays} дней.`}
+      eyebrow="Questions 3 & 4"
+      title="How much cash is tied up in inventory, and how long will it last?"
+      subtitle={`Stock is valued at cost and at retail prices. Days of cover = inventory value divided by average daily consumption over the last ${windowDays} дней.`}
       controls={
         <>
           <div className="control-wrap">
             <MapPin className="size-4 text-muted-foreground" />
-            <select aria-label="Магазин" value={storeId} onChange={(event) => setStoreId(event.target.value)} className="max-w-52 bg-transparent text-sm font-semibold outline-none">
-              <option value="all">Все магазины</option>
+            <select aria-label="Store" value={storeId} onChange={(event) => setStoreId(event.target.value)} className="max-w-52 bg-transparent text-sm font-semibold outline-none">
+              <option value="all">All stores</option>
               {(storesQuery.data ?? []).map((store) => (
                 <option key={store.store_id} value={String(store.store_id)}>{store.store_name} · {store.store_city}</option>
               ))}
@@ -134,32 +134,32 @@ function InventoryPage() {
         </>
       }
     >
-      <section aria-label="Итоги" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
-          label="Заморожено в запасах"
+          label="Cash in inventory"
           value={summary ? money(summary.cost_value) : "—"}
-          hint={summary ? `${int(summary.units)} единиц в ${int(summary.sku_rows)} позициях` : ""}
+          hint={summary ? `${int(summary.units)} units across ${int(summary.sku_rows)} line items` : ""}
           tone="coral"
           icon={<Banknote className="size-5" />}
         />
         <Stat
-          label="Розничная стоимость"
+          label="Retail value"
           value={summary ? money(summary.retail_value) : "—"}
-          hint={summary ? `Потенциальная прибыль ${money(summary.locked_profit)}` : ""}
+          hint={summary ? `Potential profit ${money(summary.locked_profit)}` : ""}
           tone="teal"
           icon={<Warehouse className="size-5" />}
         />
         <Stat
-          label="Хватит на"
-          value={summary?.days_cover ? `${num(summary.days_cover).toFixed(0)} дн.` : "—"}
-          hint={summary ? `Расход ${money(summary.daily_cost_burn)} в день по себестоимости` : ""}
+          label="Days of cover"
+          value={summary?.days_cover ? `${num(summary.days_cover).toFixed(0)}d` : "—"}
+          hint={summary ? `Burn ${money(summary.daily_cost_burn)} per day at cost` : ""}
           tone="blue"
           icon={<Clock className="size-5" />}
         />
         <Stat
-          label="Мёртвый запас"
+          label="Dead stock"
           value={summary ? money(summary.dead_cost_value) : "—"}
-          hint={summary ? `${int(summary.dead_rows)} позиций без продаж за ${windowDays} дней` : ""}
+          hint={summary ? `${int(summary.dead_rows)} line items with no sales in ${windowDays} дней` : ""}
           tone="yellow"
           icon={<Snowflake className="size-5" />}
         />
@@ -169,8 +169,8 @@ function InventoryPage() {
         <div className="panel min-w-0">
           <div className="panel-heading">
             <div>
-              <h2>Запасы по категориям</h2>
-              <p>Где лежат деньги и на сколько дней хватит каждой категории</p>
+              <h2>Inventory by category</h2>
+              <p>Where the cash sits and how many days each category will last</p>
             </div>
           </div>
           <div className="mt-6 h-72">
@@ -184,8 +184,8 @@ function InventoryPage() {
                   <YAxis axisLine={false} tickLine={false} tickFormatter={compactMoney} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
                   <Tooltip formatter={(value: number, name) => [money(value), String(name)]} contentStyle={{ borderRadius: 8, border: "1px solid var(--border)", background: "var(--popover)", fontSize: 12 }} />
                   <Legend />
-                  <Bar dataKey="cost" name="По себестоимости" fill="var(--brand)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="retail" name="В рознице" fill="var(--chart-teal)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="cost" name="At cost" fill="var(--brand)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="retail" name="At retail" fill="var(--chart-teal)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -194,7 +194,7 @@ function InventoryPage() {
             <table className="w-full min-w-[620px] text-left text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
-                  <th>Категория</th><th>Заморожено</th><th>Доля</th><th>Единиц</th><th>Расход/день</th><th>Хватит на</th>
+                  <th>Category</th><th>Tied up</th><th>Share</th><th>Units</th><th>Burn/day</th><th>Days of cover</th>
                 </tr>
               </thead>
               <tbody>
@@ -205,7 +205,7 @@ function InventoryPage() {
                     <td>{pct(row.share_pct)}</td>
                     <td className="text-muted-foreground">{int(row.units)}</td>
                     <td className="text-muted-foreground">{money(row.daily_cost_burn)}</td>
-                    <td className="font-semibold">{row.days_cover === null ? "—" : `${num(row.days_cover).toFixed(0)} дн.`}</td>
+                    <td className="font-semibold">{row.days_cover === null ? "—" : `${num(row.days_cover).toFixed(0)}d`}</td>
                   </tr>
                 ))}
               </tbody>
@@ -216,13 +216,13 @@ function InventoryPage() {
         <div className="panel min-w-0">
           <div className="panel-heading">
             <div>
-              <h2>Срок покрытия запаса</h2>
-              <p>Сколько денег лежит в каждой группе по сроку хватки</p>
+              <h2>Days of cover</h2>
+              <p>How much cash sits in each cover bucket</p>
             </div>
           </div>
           <div className="mt-6 h-64">
             {buckets.length === 0 ? (
-              <div className="grid h-full place-items-center text-sm text-muted-foreground">Нет данных</div>
+              <div className="grid h-full place-items-center text-sm text-muted-foreground">No data</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={buckets.map((row) => ({ ...row, value: num(row.cost_value) }))} layout="vertical" margin={{ left: 20 }}>
@@ -230,7 +230,7 @@ function InventoryPage() {
                   <XAxis type="number" axisLine={false} tickLine={false} tickFormatter={compactMoney} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
                   <YAxis type="category" dataKey="bucket" width={150} axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
                   <Tooltip formatter={(value: number) => money(value)} contentStyle={{ borderRadius: 8, border: "1px solid var(--border)", background: "var(--popover)", fontSize: 12 }} />
-                  <Bar dataKey="value" name="Заморожено" radius={[0, 4, 4, 0]}>
+                  <Bar dataKey="value" name="Tied up" radius={[0, 4, 4, 0]}>
                     {buckets.map((row, index) => <Cell key={row.bucket} fill={chartColors[index % chartColors.length]} />)}
                   </Bar>
                 </BarChart>
@@ -241,7 +241,7 @@ function InventoryPage() {
             {buckets.map((row) => (
               <div key={row.bucket} className="flex items-center gap-3">
                 <span className="flex-1 truncate text-muted-foreground">{row.bucket}</span>
-                <span className="text-xs text-muted-foreground">{int(row.sku_rows)} поз.</span>
+                <span className="text-xs text-muted-foreground">{int(row.sku_rows)} items</span>
                 <strong>{pct(row.share_pct)}</strong>
               </div>
             ))}
@@ -253,15 +253,15 @@ function InventoryPage() {
         <div className="panel min-w-0 p-0">
           <div className="panel-heading border-b border-border p-5 md:p-6">
             <div>
-              <h2>Запасы по магазинам</h2>
-              <p>Где заморожено больше всего денег и надолго ли</p>
+              <h2>Inventory by store</h2>
+              <p>Where the most cash is tied up and for how long</p>
             </div>
           </div>
           <div className="max-h-[430px] overflow-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="sticky top-0 bg-muted/70 backdrop-blur">
                 <tr className="text-xs uppercase text-muted-foreground">
-                  <th className="px-4 py-3">Магазин</th><th className="px-4 py-3">Заморожено</th><th className="px-4 py-3">Единиц</th><th className="px-4 py-3">Хватит на</th><th className="px-4 py-3">Мёртвый запас</th>
+                  <th className="px-4 py-3">Store</th><th className="px-4 py-3">Tied up</th><th className="px-4 py-3">Units</th><th className="px-4 py-3">Days of cover</th><th className="px-4 py-3">Dead stock</th>
                 </tr>
               </thead>
               <tbody>
@@ -270,7 +270,7 @@ function InventoryPage() {
                     <td className="px-4 py-2 font-semibold">{row.store_name} · <span className="text-muted-foreground">{row.store_city}</span></td>
                     <td className="px-4 py-2 font-semibold">{money(row.cost_value)}</td>
                     <td className="px-4 py-2 text-muted-foreground">{int(row.units)}</td>
-                    <td className="px-4 py-2">{row.days_cover === null ? "—" : `${num(row.days_cover).toFixed(0)} дн.`}</td>
+                    <td className="px-4 py-2">{row.days_cover === null ? "—" : `${num(row.days_cover).toFixed(0)}d`}</td>
                     <td className="px-4 py-2 text-muted-foreground">{money(row.dead_cost_value)}</td>
                   </tr>
                 ))}
@@ -283,15 +283,15 @@ function InventoryPage() {
         <div className="panel min-w-0 p-0">
           <div className="panel-heading border-b border-border p-5 md:p-6">
             <div>
-              <h2>Залежавшийся товар</h2>
-              <p>Без продаж или с запасом больше 90 дней — первые кандидаты на распродажу</p>
+              <h2>Slow-moving stock</h2>
+              <p>No sales or over 90 days of cover — first candidates for markdown</p>
             </div>
           </div>
           <div className="max-h-[430px] overflow-auto">
             <table className="w-full min-w-[620px] text-left text-sm">
               <thead className="sticky top-0 bg-muted/70 backdrop-blur">
                 <tr className="text-xs uppercase text-muted-foreground">
-                  <th className="px-4 py-3">Товар</th><th className="px-4 py-3">Магазин</th><th className="px-4 py-3">Остаток</th><th className="px-4 py-3">Деньги</th><th className="px-4 py-3">Хватит на</th>
+                  <th className="px-4 py-3">Product</th><th className="px-4 py-3">Store</th><th className="px-4 py-3">Stock</th><th className="px-4 py-3">Cash</th><th className="px-4 py-3">Days of cover</th>
                 </tr>
               </thead>
               <tbody>
@@ -299,9 +299,9 @@ function InventoryPage() {
                   <tr key={`${row.store_id}-${row.product_id}`} className="border-b border-border last:border-0 hover:bg-muted/30">
                     <td className="px-4 py-2"><span className="font-bold">{row.product_name}</span><br /><span className="text-xs text-muted-foreground">{row.category}</span></td>
                     <td className="px-4 py-2 text-muted-foreground">{row.store_name} · {row.store_city}</td>
-                    <td className="px-4 py-2">{row.stock_on_hand} шт.</td>
+                    <td className="px-4 py-2">{row.stock_on_hand} pcs</td>
                     <td className="px-4 py-2 font-semibold">{money(row.cost_value)}</td>
-                    <td className="px-4 py-2">{row.days_cover === null ? "нет продаж" : `${num(row.days_cover).toFixed(0)} дн.`}</td>
+                    <td className="px-4 py-2">{row.days_cover === null ? "нет продаж" : `${num(row.days_cover).toFixed(0)}d`}</td>
                   </tr>
                 ))}
               </tbody>

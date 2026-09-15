@@ -47,38 +47,38 @@ const PAGE_SIZE = 100;
 
 const configs: Record<TableName, { title: string; file: string; description: string; fields: Field[]; key: string; conflict: string }> = {
   products: {
-    title: "Каталог товаров", file: "products.csv", description: "Названия, категории, себестоимость и цены",
+    title: "Product catalog", file: "products.csv", description: "Names, categories, cost and prices",
     key: "product_id", conflict: "product_id",
     fields: [
-      { key: "product_id", label: "Product ID", type: "number" }, { key: "product_name", label: "Название", type: "text" },
-      { key: "product_category", label: "Категория", type: "text" }, { key: "product_cost", label: "Себестоимость", type: "money" },
-      { key: "product_price", label: "Цена", type: "money" },
+      { key: "product_id", label: "Product ID", type: "number" }, { key: "product_name", label: "Name", type: "text" },
+      { key: "product_category", label: "Category", type: "text" }, { key: "product_cost", label: "Cost", type: "money" },
+      { key: "product_price", label: "Price", type: "money" },
     ],
   },
   sales: {
-    title: "Продажи", file: "sales.csv", description: "Продажи по датам, магазинам и товарам",
+    title: "Sales", file: "sales.csv", description: "Sales by date, store and product",
     key: "sale_id", conflict: "sale_id",
     fields: [
-      { key: "sale_id", label: "Sale ID", type: "number" }, { key: "sale_date", label: "Дата", type: "date", aliases: ["date"] },
+      { key: "sale_id", label: "Sale ID", type: "number" }, { key: "sale_date", label: "Date", type: "date", aliases: ["date"] },
       { key: "store_id", label: "Store ID", type: "number" }, { key: "product_id", label: "Product ID", type: "number" },
-      { key: "units", label: "Количество", type: "number" },
+      { key: "units", label: "Units", type: "number" },
     ],
   },
   stores: {
-    title: "Филиалы", file: "stores.csv", description: "Магазины, города, адреса и даты открытия",
+    title: "Stores", file: "stores.csv", description: "Stores, cities, addresses and opening dates",
     key: "store_id", conflict: "store_id",
     fields: [
-      { key: "store_id", label: "Store ID", type: "number" }, { key: "store_name", label: "Название", type: "text" },
-      { key: "store_city", label: "Город", type: "text" }, { key: "store_location", label: "Расположение", type: "text" },
-      { key: "store_open_date", label: "Дата открытия", type: "date" },
+      { key: "store_id", label: "Store ID", type: "number" }, { key: "store_name", label: "Name", type: "text" },
+      { key: "store_city", label: "City", type: "text" }, { key: "store_location", label: "Location", type: "text" },
+      { key: "store_open_date", label: "Open date", type: "date" },
     ],
   },
   inventory: {
-    title: "Остатки", file: "inventory.csv", description: "Количество товара в каждом филиале",
+    title: "Inventory", file: "inventory.csv", description: "Stock quantity at each store",
     key: "store_id", conflict: "store_id,product_id",
     fields: [
       { key: "store_id", label: "Store ID", type: "number" }, { key: "product_id", label: "Product ID", type: "number" },
-      { key: "stock_on_hand", label: "Остаток", type: "number" },
+      { key: "stock_on_hand", label: "Stock", type: "number" },
     ],
   },
 };
@@ -87,18 +87,18 @@ export const Route = createFileRoute("/data")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Управление данными — ToyWorld" },
-      { name: "description", content: "Импорт CSV и управление товарами, продажами, филиалами и остатками ToyWorld." },
-      { property: "og:title", content: "Управление данными — ToyWorld" },
-      { property: "og:description", content: "Импорт и управление операционными данными сети ToyWorld." },
+      { title: "Data management — ToyWorld" },
+      { name: "description", content: "Import CSV files and manage ToyWorld products, sales, stores and inventory." },
+      { property: "og:title", content: "Data management — ToyWorld" },
+      { property: "og:description", content: "Import and manage ToyWorld operational data." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: DataPage,
   pendingComponent: () => <div className="grid min-h-screen place-items-center bg-background"><Loader2 className="size-7 animate-spin text-primary" /></div>,
-  errorComponent: ({ error }) => <div className="grid min-h-screen place-items-center bg-background p-6"><div className="panel max-w-md text-center"><AlertTriangle className="mx-auto size-8 text-destructive" /><h1 className="mt-3 text-xl font-bold">Не удалось загрузить данные</h1><p className="mt-2 text-sm text-muted-foreground">{error.message}</p></div></div>,
-  notFoundComponent: () => <div>Страница не найдена</div>,
+  errorComponent: ({ error }) => <div className="grid min-h-screen place-items-center bg-background p-6"><div className="panel max-w-md text-center"><AlertTriangle className="mx-auto size-8 text-destructive" /><h1 className="mt-3 text-xl font-bold">Could not load data</h1><p className="mt-2 text-sm text-muted-foreground">{error.message}</p></div></div>,
+  notFoundComponent: () => <div>Page not found</div>,
 });
 
 function DataPage() {
@@ -148,9 +148,9 @@ function DataPage() {
         if (error) throw error;
       }
       await refresh();
-      setMessage({ text: `Импортировано ${rows.length.toLocaleString("ru-RU")} строк. Удалено дублей: ${(parsed.length - rows.length).toLocaleString("ru-RU")}.` });
+      setMessage({ text: `Imported ${rows.length.toLocaleString("en-US")} rows. Duplicates removed: ${(parsed.length - rows.length).toLocaleString("en-US")}.` });
     } catch (error) {
-      setMessage({ text: describeError(error, "Не удалось импортировать файл."), error: true });
+      setMessage({ text: describeError(error, "Could not import the file."), error: true });
     } finally {
       setBusy(false);
       const input = fileRefs.current[target];
@@ -166,9 +166,9 @@ function DataPage() {
       const normalized = normalizeRow(editor, table);
       const { error } = await supabase.from(table).upsert(normalized as never, { onConflict: config.conflict });
       if (error) throw error;
-      setEditor(null); await refresh(); setMessage({ text: "Запись сохранена." });
+      setEditor(null); await refresh(); setMessage({ text: "Record saved." });
     } catch (error) {
-      setMessage({ text: describeError(error, "Не удалось сохранить запись."), error: true });
+      setMessage({ text: describeError(error, "Could not save the record."), error: true });
     } finally { setBusy(false); }
   }
 
@@ -192,9 +192,9 @@ function DataPage() {
         ({ error } = await supabase.from("stores").delete().eq("store_id", Number(deleteTarget["store_id"])));
       }
       if (error) throw error;
-      setDeleteTarget(null); setPage(0); await refresh(); setMessage({ text: deleteTarget === "all" ? "Все записи удалены." : "Запись удалена." });
+      setDeleteTarget(null); setPage(0); await refresh(); setMessage({ text: deleteTarget === "all" ? "All records deleted." : "Record deleted." });
     } catch (error) {
-      setMessage({ text: describeError(error, "Не удалось удалить данные."), error: true });
+      setMessage({ text: describeError(error, "Could not delete data."), error: true });
       setDeleteTarget(null);
     } finally { setBusy(false); }
   }
@@ -204,17 +204,17 @@ function DataPage() {
       <header className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground">
         <div className="mx-auto flex h-20 max-w-[1600px] items-center gap-4 px-4 md:px-8">
           <Link to="/" className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><Sparkles className="size-5" /></span><strong className="font-display text-xl">ToyWorld<span className="text-brand">.</span></strong></Link>
-          <div className="ml-auto"><Button asChild variant="ghost" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"><Link to="/"><ArrowLeft />К дашборду</Link></Button></div>
+          <div className="ml-auto"><Button asChild variant="ghost" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"><Link to="/"><ArrowLeft />Back to dashboard</Link></Button></div>
         </div>
       </header>
 
       <main className="mx-auto max-w-[1600px] px-4 py-8 md:px-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div><p className="text-sm font-bold text-brand">Центр данных</p><h1 className="mt-1 font-display text-3xl font-extrabold md:text-4xl">Импорт и управление</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">Загружайте CSV повторно в любое время. Совпадающие ключи обновляются, а дубли не создаются.</p></div>
-          <Button onClick={() => setEditor(emptyRow)}><Plus />Добавить запись</Button>
+          <div><p className="text-sm font-bold text-brand">Data center</p><h1 className="mt-1 font-display text-3xl font-extrabold md:text-4xl">Import & manage</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">Re-upload CSV files any time. Matching keys are updated and duplicates are never created.</p></div>
+          <Button onClick={() => setEditor(emptyRow)}><Plus />Add record</Button>
         </div>
 
-        <section aria-label="Импорт файлов" className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section aria-label="File import" className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {(Object.keys(configs) as TableName[]).map((name) => {
             const item = configs[name];
             return <article key={name} className={`panel cursor-pointer transition ${table === name ? "border-primary ring-2 ring-primary/10" : "hover:border-ring"}`} onClick={() => switchTable(name)}>
@@ -230,7 +230,7 @@ function DataPage() {
 
         <section className="panel mt-5 overflow-hidden p-0">
           <div className="flex flex-wrap items-center gap-3 border-b border-border p-5">
-            <div><h2 className="font-display text-lg font-extrabold">{config.title}</h2><p className="text-xs text-muted-foreground">{data.count.toLocaleString("ru-RU")} записей · по {PAGE_SIZE} на странице</p></div>
+            <div><h2 className="font-display text-lg font-extrabold">{config.title}</h2><p className="text-xs text-muted-foreground">{data.count.toLocaleString("en-US")} records · {PAGE_SIZE} per page</p></div>
             <form className="relative ml-auto w-full sm:w-72" onSubmit={(event) => { event.preventDefault(); setPage(0); setAppliedSearch(search.trim()); }}><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Поиск…" className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring/20" /></form>
             <Button variant="destructive" size="sm" disabled={data.count === 0 || busy} onClick={() => setDeleteTarget("all")}><Trash2 />Удалить всё</Button>
           </div>
@@ -240,7 +240,7 @@ function DataPage() {
             {data.rows.length === 0 && <div className="py-16 text-center"><Database className="mx-auto size-9 text-muted-foreground" /><p className="mt-3 text-sm font-bold">Данных пока нет</p><p className="mt-1 text-xs text-muted-foreground">Загрузите {config.file} или добавьте запись вручную.</p></div>}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 text-sm"><span className="text-muted-foreground">Страница {page + 1} из {totalPages}</span><div className="flex gap-2"><Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((value) => value - 1)}><ChevronLeft />Назад</Button><Button variant="outline" size="sm" disabled={page + 1 >= totalPages} onClick={() => setPage((value) => value + 1)}>Далее<ChevronRight /></Button></div></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 text-sm"><span className="text-muted-foreground">Страница {page + 1} of {totalPages}</span><div className="flex gap-2"><Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((value) => value - 1)}><ChevronLeft />Назад</Button><Button variant="outline" size="sm" disabled={page + 1 >= totalPages} onClick={() => setPage((value) => value + 1)}>Далее<ChevronRight /></Button></div></div>
         </section>
       </main>
 
@@ -280,11 +280,11 @@ function describeError(error: unknown, fallback: string): string {
   if (!message) return fallback;
   const lower = message.toLowerCase();
   if (lower.includes("foreign key") || lower.includes("violates foreign key constraint") || lower.includes("is not present in table")) {
-    if (lower.includes("sales")) return "Продажи ссылаются на магазин или товар, которого нет в базе. Сначала импортируйте stores.csv и products.csv, затем sales.csv.";
-    if (lower.includes("inventory")) return "Остатки ссылаются на магазин или товар, которого нет в базе. Сначала импортируйте stores.csv и products.csv, затем inventory.csv.";
+    if (lower.includes("sales")) return "Sales ссылаются на магазин или товар, которого нет в базе. Сначала импортируйте stores.csv и products.csv, затем sales.csv.";
+    if (lower.includes("inventory")) return "Inventory ссылаются на магазин или товар, которого нет в базе. Сначала импортируйте stores.csv и products.csv, затем inventory.csv.";
     return `Связанная запись не найдена: ${message}`;
   }
-  if (lower.includes("row-level security")) return "Нет доступа к таблице. Проверьте правила доступа в базе.";
+  if (lower.includes("row-level security")) return "No access to this table. Check the access rules in the database.";
   return message;
 }
 
@@ -340,7 +340,7 @@ function normalizeRow(row: DataRow, table: TableName): DataRow {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(raw) || Number.isNaN(Date.parse(raw))) throw new Error(`${field.label}: используйте формат YYYY-MM-DD`); result[field.key] = raw;
     } else result[field.key] = raw;
   }
-  if (table === "sales" && Number(result["units"]) < 1) throw new Error("Количество должно быть больше нуля");
+  if (table === "sales" && Number(result["units"]) < 1) throw new Error("Units должно быть больше нуля");
   return result;
 }
 
@@ -351,6 +351,6 @@ function rowKey(row: DataRow, table: TableName, fallback: number) {
 function formatValue(value: string | number | undefined, type: Field["type"]) {
   if (value === undefined) return "—";
   if (type === "money") return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value));
-  if (type === "date") return new Intl.DateTimeFormat("ru-RU").format(new Date(`${String(value)}T00:00:00`));
+  if (type === "date") return new Intl.DateTimeFormat("en-US").format(new Date(`${String(value)}T00:00:00`));
   return String(value);
 }
