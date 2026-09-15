@@ -112,7 +112,7 @@ function InventoryPage() {
     <AppShell
       eyebrow="Questions 3 & 4"
       title="How much cash is tied up in inventory, and how long will it last?"
-      subtitle={`Stock is valued at cost and at retail prices. Days of cover = inventory value divided by average daily consumption over the last ${windowDays} дней.`}
+      subtitle={`Stock is valued at cost and at retail prices. Days of cover = inventory value divided by average daily consumption over the last ${windowDays} days.`}
       controls={
         <>
           <div className="control-wrap">
@@ -159,7 +159,7 @@ function InventoryPage() {
         <Stat
           label="Dead stock"
           value={summary ? money(summary.dead_cost_value) : "—"}
-          hint={summary ? `${int(summary.dead_rows)} line items with no sales in ${windowDays} дней` : ""}
+          hint={summary ? `${int(summary.dead_rows)} line items with no sales in ${windowDays} days` : ""}
           tone="yellow"
           icon={<Snowflake className="size-5" />}
         />
@@ -301,14 +301,14 @@ function InventoryPage() {
                     <td className="px-4 py-2 text-muted-foreground">{row.store_name} · {row.store_city}</td>
                     <td className="px-4 py-2">{row.stock_on_hand} pcs</td>
                     <td className="px-4 py-2 font-semibold">{money(row.cost_value)}</td>
-                    <td className="px-4 py-2">{row.days_cover === null ? "нет продаж" : `${num(row.days_cover).toFixed(0)}d`}</td>
+                    <td className="px-4 py-2">{row.days_cover === null ? "no sales" : `${num(row.days_cover).toFixed(0)}d`}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {slowQuery.isPending && <div className="grid py-12 place-items-center"><Loader2 className="size-6 animate-spin text-brand" /></div>}
             {!slowQuery.isPending && (slowQuery.data ?? []).length === 0 && (
-              <p className="py-12 text-center text-sm text-muted-foreground">Залежавшихся позиций нет.</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">No slow-moving items.</p>
             )}
           </div>
         </div>

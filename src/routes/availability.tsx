@@ -131,7 +131,7 @@ function AvailabilityPage() {
     <AppShell
       eyebrow="Question 2"
       title="Are we losing sales to stockouts?"
-      subtitle={`Demand is based on actual sales over the last ${windowDays} дней. Weekly loss = (weekly demand − current stock) × price. Items with zero stock but live demand are direct losses.`}
+      subtitle={`Demand is based on actual sales over the last ${windowDays} days. Weekly loss = (weekly demand − current stock) × price. Items with zero stock but live demand are direct losses.`}
       controls={
         <>
           <div className="control-wrap">

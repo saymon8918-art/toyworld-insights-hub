@@ -231,28 +231,28 @@ function DataPage() {
         <section className="panel mt-5 overflow-hidden p-0">
           <div className="flex flex-wrap items-center gap-3 border-b border-border p-5">
             <div><h2 className="font-display text-lg font-extrabold">{config.title}</h2><p className="text-xs text-muted-foreground">{data.count.toLocaleString("en-US")} records · {PAGE_SIZE} per page</p></div>
-            <form className="relative ml-auto w-full sm:w-72" onSubmit={(event) => { event.preventDefault(); setPage(0); setAppliedSearch(search.trim()); }}><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Поиск…" className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring/20" /></form>
-            <Button variant="destructive" size="sm" disabled={data.count === 0 || busy} onClick={() => setDeleteTarget("all")}><Trash2 />Удалить всё</Button>
+            <form className="relative ml-auto w-full sm:w-72" onSubmit={(event) => { event.preventDefault(); setPage(0); setAppliedSearch(search.trim()); }}><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search…" className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring/20" /></form>
+            <Button variant="destructive" size="sm" disabled={data.count === 0 || busy} onClick={() => setDeleteTarget("all")}><Trash2 />Delete all</Button>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-border bg-muted/50 text-xs uppercase text-muted-foreground">{config.fields.map((field) => <th key={field.key}>{field.label}</th>)}<th className="w-24 text-right">Действия</th></tr></thead><tbody>{data.rows.map((row, rowIndex) => <tr key={rowKey(row, table, rowIndex)} className="border-b border-border last:border-0 hover:bg-muted/30">{config.fields.map((field) => <td key={field.key}>{formatValue(row[field.key], field.type)}</td>)}<td><div className="flex justify-end gap-1"><Button aria-label="Изменить" title="Изменить" size="icon" variant="ghost" onClick={() => setEditor(row)}><Pencil /></Button><Button aria-label="Удалить" title="Удалить" size="icon" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget(row)}><Trash2 /></Button></div></td></tr>)}</tbody></table>
-            {data.rows.length === 0 && <div className="py-16 text-center"><Database className="mx-auto size-9 text-muted-foreground" /><p className="mt-3 text-sm font-bold">Данных пока нет</p><p className="mt-1 text-xs text-muted-foreground">Загрузите {config.file} или добавьте запись вручную.</p></div>}
+            <table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-border bg-muted/50 text-xs uppercase text-muted-foreground">{config.fields.map((field) => <th key={field.key}>{field.label}</th>)}<th className="w-24 text-right">Actions</th></tr></thead><tbody>{data.rows.map((row, rowIndex) => <tr key={rowKey(row, table, rowIndex)} className="border-b border-border last:border-0 hover:bg-muted/30">{config.fields.map((field) => <td key={field.key}>{formatValue(row[field.key], field.type)}</td>)}<td><div className="flex justify-end gap-1"><Button aria-label="Edit" title="Edit" size="icon" variant="ghost" onClick={() => setEditor(row)}><Pencil /></Button><Button aria-label="Delete" title="Delete" size="icon" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget(row)}><Trash2 /></Button></div></td></tr>)}</tbody></table>
+            {data.rows.length === 0 && <div className="py-16 text-center"><Database className="mx-auto size-9 text-muted-foreground" /><p className="mt-3 text-sm font-bold">No data yet</p><p className="mt-1 text-xs text-muted-foreground">Upload {config.file} or add a record manually.</p></div>}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 text-sm"><span className="text-muted-foreground">Страница {page + 1} of {totalPages}</span><div className="flex gap-2"><Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((value) => value - 1)}><ChevronLeft />Назад</Button><Button variant="outline" size="sm" disabled={page + 1 >= totalPages} onClick={() => setPage((value) => value + 1)}>Далее<ChevronRight /></Button></div></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 text-sm"><span className="text-muted-foreground">Page {page + 1} of {totalPages}</span><div className="flex gap-2"><Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((value) => value - 1)}><ChevronLeft />Back</Button><Button variant="outline" size="sm" disabled={page + 1 >= totalPages} onClick={() => setPage((value) => value + 1)}>Next<ChevronRight /></Button></div></div>
         </section>
       </main>
 
       <Dialog open={editor !== null} onOpenChange={(open) => { if (!open) setEditor(null); }}>
         <DialogContent className="sm:max-w-xl">
-          <DialogHeader><DialogTitle>{editor && String(editor[config.key] ?? "") ? "Изменить запись" : "Новая запись"}</DialogTitle><DialogDescription>Заполните все поля. Идентификаторы должны быть уникальными.</DialogDescription></DialogHeader>
-          {editor && <form onSubmit={saveRow}><div className="grid gap-4 py-3 sm:grid-cols-2">{config.fields.map((field) => <label key={field.key} className="grid gap-1.5 text-sm font-semibold"><span>{field.label}</span><input required type={field.type === "date" ? "date" : field.type === "text" ? "text" : "number"} step={field.type === "money" ? "0.01" : field.type === "number" ? "1" : undefined} min={field.type === "number" || field.type === "money" ? "0" : undefined} value={String(editor[field.key] ?? "")} onChange={(event) => setEditor({ ...editor, [field.key]: event.target.value })} className="h-10 rounded-md border border-input bg-background px-3 font-normal outline-none focus:ring-2 focus:ring-ring/20" /></label>)}</div><DialogFooter><Button type="button" variant="outline" onClick={() => setEditor(null)}>Отмена</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="animate-spin" />}Сохранить</Button></DialogFooter></form>}
+          <DialogHeader><DialogTitle>{editor && String(editor[config.key] ?? "") ? "Edit record" : "New record"}</DialogTitle><DialogDescription>Fill in every field. Identifiers must be unique.</DialogDescription></DialogHeader>
+          {editor && <form onSubmit={saveRow}><div className="grid gap-4 py-3 sm:grid-cols-2">{config.fields.map((field) => <label key={field.key} className="grid gap-1.5 text-sm font-semibold"><span>{field.label}</span><input required type={field.type === "date" ? "date" : field.type === "text" ? "text" : "number"} step={field.type === "money" ? "0.01" : field.type === "number" ? "1" : undefined} min={field.type === "number" || field.type === "money" ? "0" : undefined} value={String(editor[field.key] ?? "")} onChange={(event) => setEditor({ ...editor, [field.key]: event.target.value })} className="h-10 rounded-md border border-input bg-background px-3 font-normal outline-none focus:ring-2 focus:ring-ring/20" /></label>)}</div><DialogFooter><Button type="button" variant="outline" onClick={() => setEditor(null)}>Cancel</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="animate-spin" />}Save</Button></DialogFooter></form>}
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
-        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{deleteTarget === "all" ? `Удалить все данные «${config.title}»?` : "Удалить эту запись?"}</AlertDialogTitle><AlertDialogDescription>{deleteTarget === "all" ? "Это действие необратимо. Связанные продажи и остатки также могут быть удалены." : "Восстановить запись после удаления будет невозможно."}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Отмена</AlertDialogCancel><AlertDialogAction onClick={() => void removeRows()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Удалить</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{deleteTarget === "all" ? `Delete all “${config.title}” data?` : "Delete this record?"}</AlertDialogTitle><AlertDialogDescription>{deleteTarget === "all" ? "This cannot be undone. Related sales and inventory rows may be deleted too." : "The record cannot be restored after deletion."}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => void removeRows()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
     </div>
   );
@@ -280,9 +280,9 @@ function describeError(error: unknown, fallback: string): string {
   if (!message) return fallback;
   const lower = message.toLowerCase();
   if (lower.includes("foreign key") || lower.includes("violates foreign key constraint") || lower.includes("is not present in table")) {
-    if (lower.includes("sales")) return "Sales ссылаются на магазин или товар, которого нет в базе. Сначала импортируйте stores.csv и products.csv, затем sales.csv.";
-    if (lower.includes("inventory")) return "Inventory ссылаются на магазин или товар, которого нет в базе. Сначала импортируйте stores.csv и products.csv, затем inventory.csv.";
-    return `Связанная запись не найдена: ${message}`;
+    if (lower.includes("sales")) return "Sales reference a store or product that is not in the database. Import stores.csv and products.csv first, then sales.csv.";
+    if (lower.includes("inventory")) return "Inventory rows reference a store or product that is not in the database. Import stores.csv and products.csv first, then inventory.csv.";
+    return `Related record not found: ${message}`;
   }
   if (lower.includes("row-level security")) return "No access to this table. Check the access rules in the database.";
   return message;
@@ -290,14 +290,14 @@ function describeError(error: unknown, fallback: string): string {
 
 function parseCsv(text: string, table: TableName): DataRow[] {
   const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
-  if (lines.length < 2) throw new Error("Файл пуст или не содержит строк данных.");
+  if (lines.length < 2) throw new Error("The file is empty or has no data rows.");
   const firstLine = lines[0];
-  if (!firstLine) throw new Error("Файл не содержит заголовков.");
+  if (!firstLine) throw new Error("The file has no header row.");
   const delimiter = firstLine.includes(";") ? ";" : ",";
   const matrix = lines.map((line) => splitCsvLine(line, delimiter));
   const expected = configs[table].fields.map((field) => field.key);
   const headerRow = matrix[0];
-  if (!headerRow) throw new Error("Файл не содержит заголовков.");
+  if (!headerRow) throw new Error("The file has no header row.");
   const aliasMap = new Map<string, string>();
   for (const field of configs[table].fields) {
     aliasMap.set(field.key.toLowerCase(), field.key);
@@ -308,10 +308,10 @@ function parseCsv(text: string, table: TableName): DataRow[] {
     return aliasMap.get(normalized) ?? normalized;
   });
   const missing = expected.filter((field) => !headers.includes(field));
-  if (missing.length) throw new Error(`Не найдены столбцы: ${missing.join(", ")}`);
+  if (missing.length) throw new Error(`Missing columns: ${missing.join(", ")}`);
   return matrix.slice(1).map((values, index) => {
     const raw = Object.fromEntries(headers.map((header, column) => [header, values[column]?.trim() ?? ""]));
-    try { return normalizeRow(raw, table); } catch (error) { throw new Error(`Строка ${index + 2}: ${error instanceof Error ? error.message : "ошибка формата"}`); }
+    try { return normalizeRow(raw, table); } catch (error) { throw new Error(`Row ${index + 2}: ${error instanceof Error ? error.message : "format error"}`); }
   });
 }
 
@@ -331,16 +331,16 @@ function normalizeRow(row: DataRow, table: TableName): DataRow {
   const result: DataRow = {};
   for (const field of configs[table].fields) {
     const raw = String(row[field.key] ?? "").trim();
-    if (!raw) throw new Error(`поле ${field.label} обязательно`);
+    if (!raw) throw new Error(`field ${field.label} is required`);
     if (field.type === "number") {
-      const value = Number(raw); if (!Number.isInteger(value) || value < 0) throw new Error(`${field.label}: ожидается целое неотрицательное число`); result[field.key] = value;
+      const value = Number(raw); if (!Number.isInteger(value) || value < 0) throw new Error(`${field.label}: expected a non-negative whole number`); result[field.key] = value;
     } else if (field.type === "money") {
-      const value = Number(raw.replace(/[$€£\s]/g, "").replace(",", ".")); if (!Number.isFinite(value) || value < 0) throw new Error(`${field.label}: неверная сумма`); result[field.key] = value;
+      const value = Number(raw.replace(/[$€£\s]/g, "").replace(",", ".")); if (!Number.isFinite(value) || value < 0) throw new Error(`${field.label}: invalid amount`); result[field.key] = value;
     } else if (field.type === "date") {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(raw) || Number.isNaN(Date.parse(raw))) throw new Error(`${field.label}: используйте формат YYYY-MM-DD`); result[field.key] = raw;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(raw) || Number.isNaN(Date.parse(raw))) throw new Error(`${field.label}: use the YYYY-MM-DD format`); result[field.key] = raw;
     } else result[field.key] = raw;
   }
-  if (table === "sales" && Number(result["units"]) < 1) throw new Error("Units должно быть больше нуля");
+  if (table === "sales" && Number(result["units"]) < 1) throw new Error("Units must be greater than zero");
   return result;
 }
 
