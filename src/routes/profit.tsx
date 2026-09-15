@@ -46,9 +46,9 @@ type ProductRow = { product_id: number; product_name: string; category: string; 
 type Bounds = { min_date: string | null; max_date: string | null; sale_rows: number };
 
 const rangeOptions = [
-  { key: "all", label: "Весь период" },
-  { key: "90", label: "90 дней" },
-  { key: "30", label: "30 дней" },
+  { key: "all", label: "All time" },
+  { key: "90", label: "90 days" },
+  { key: "30", label: "30 days" },
 ] as const;
 
 function shiftDays(date: string, delta: number) {
@@ -61,10 +61,10 @@ export const Route = createFileRoute("/profit")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Прибыль по категориям и магазинам — ToyWorld" },
-      { name: "description", content: "Какие категории игрушек приносят наибольшую прибыль и одинаково ли это во всех магазинах сети." },
-      { property: "og:title", content: "Прибыль по категориям и магазинам — ToyWorld" },
-      { property: "og:description", content: "Валовая прибыль, маржа и структура заработка по категориям и точкам продаж." },
+      { title: "Category & store profit — ToyWorld" },
+      { name: "description", content: "Which toy categories bring the most profit, and whether that holds true across every store." },
+      { property: "og:title", content: "Category & store profit — ToyWorld" },
+      { property: "og:description", content: "Gross profit, margin and earnings mix by category and store." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -78,12 +78,12 @@ export const Route = createFileRoute("/profit")({
   errorComponent: ({ error }) => (
     <div className="grid min-h-screen place-items-center p-6">
       <div className="panel max-w-md text-center" role="alert">
-        <h2 className="font-display text-xl font-extrabold">Не удалось загрузить данные</h2>
+        <h2 className="font-display text-xl font-extrabold">Could not load data</h2>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
       </div>
     </div>
   ),
-  notFoundComponent: () => <div className="p-10 text-center">Страница не найдена.</div>,
+  notFoundComponent: () => <div className="p-10 text-center">Page not found.</div>,
 });
 
 function ProfitPage() {
@@ -178,9 +178,9 @@ function ProfitPage() {
 
   return (
     <AppShell
-      eyebrow="Вопрос 1"
-      title="Какие категории приносят наибольшую прибыль?"
-      subtitle={`Прибыль считается как (цена − себестоимость) × количество проданных единиц. Период: ${range.from ?? "—"} — ${range.to ?? "—"}.`}
+      eyebrow="Question 1"
+      title="Which categories bring the most profit?"
+      subtitle={`Profit is (price − cost) × units sold. Period: ${range.from ?? "—"} — ${range.to ?? "—"}.`}
       controls={
         <div className="segmented">
           {rangeOptions.map((option) => (
@@ -191,19 +191,19 @@ function ProfitPage() {
         </div>
       }
     >
-      <section aria-label="Итоги" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Валовая прибыль" value={summary ? money(summary.profit) : "—"} hint={summary ? `Выручка ${money(summary.revenue)}` : ""} tone="coral" icon={<Coins className="size-5" />} />
-        <Stat label="Средняя маржа" value={summary ? pct(summary.margin_pct) : "—"} hint={summary ? `Себестоимость ${money(summary.cost)}` : ""} tone="teal" icon={<Percent className="size-5" />} />
-        <Stat label="Топ категория по прибыли" value={chainTop ?? "—"} hint={categories[0] ? `${pct(categories[0].profit_share)} всей прибыли сети` : ""} tone="yellow" icon={<Boxes className="size-5" />} />
-        <Stat label="Магазинов с иным лидером" value={String(deviating.length)} hint={`из ${stores.length} магазинов сети`} tone="blue" icon={<TrendingUp className="size-5" />} />
+      <section aria-label="Summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Gross profit" value={summary ? money(summary.profit) : "—"} hint={summary ? `Revenue ${money(summary.revenue)}` : ""} tone="coral" icon={<Coins className="size-5" />} />
+        <Stat label="Average margin" value={summary ? pct(summary.margin_pct) : "—"} hint={summary ? `Cost ${money(summary.cost)}` : ""} tone="teal" icon={<Percent className="size-5" />} />
+        <Stat label="Top category by profit" value={chainTop ?? "—"} hint={categories[0] ? `${pct(categories[0].profit_share)} of chain-wide profit` : ""} tone="yellow" icon={<Boxes className="size-5" />} />
+        <Stat label="Stores with a different leader" value={String(deviating.length)} hint={`of ${stores.length} stores`} tone="blue" icon={<TrendingUp className="size-5" />} />
       </section>
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,0.9fr)]">
         <div className="panel min-w-0">
           <div className="panel-heading">
             <div>
-              <h2>Прибыль и маржа по категориям</h2>
-              <p>Сколько зарабатывает каждая категория и какая у неё рентабельность</p>
+              <h2>Profit and margin by category</h2>
+              <p>How much each category earns and how profitable it is</p>
             </div>
           </div>
           <div className="mt-6 h-80">
@@ -216,12 +216,12 @@ function ProfitPage() {
                   <XAxis dataKey="category" axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
                   <YAxis axisLine={false} tickLine={false} tickFormatter={compactMoney} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
                   <Tooltip
-                    formatter={(value: number, name) => (name === "Маржа" ? pct(value) : money(value))}
+                    formatter={(value: number, name) => (name === "Margin" ? pct(value) : money(value))}
                     contentStyle={{ borderRadius: 8, border: "1px solid var(--border)", background: "var(--popover)", fontSize: 12 }}
                   />
                   <Legend />
-                  <Bar dataKey="revenue" name="Выручка" fill="var(--chart-blue)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="profit" name="Прибыль" fill="var(--brand)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" name="Revenue" fill="var(--chart-blue)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="profit" name="Profit" fill="var(--brand)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -230,7 +230,7 @@ function ProfitPage() {
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
-                  <th>Категория</th><th>Прибыль</th><th>Доля прибыли</th><th>Маржа</th><th>Продано, шт.</th><th>Товаров</th>
+                  <th>Category</th><th>Profit</th><th>Profit share</th><th>Margin</th><th>Units sold</th><th>SKUs</th>
                 </tr>
               </thead>
               <tbody>
@@ -252,8 +252,8 @@ function ProfitPage() {
         <div className="panel">
           <div className="panel-heading">
             <div>
-              <h2>Структура прибыли</h2>
-              <p>Доля категорий в общей прибыли сети</p>
+              <h2>Profit mix</h2>
+              <p>Category share of total chain profit</p>
             </div>
           </div>
           <div className="relative mx-auto mt-5 h-56 max-w-64">
@@ -270,7 +270,7 @@ function ProfitPage() {
             <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
               <div>
                 <strong className="font-display text-2xl">{summary ? compactMoney(summary.profit) : "—"}</strong>
-                <p className="text-xs text-muted-foreground">Прибыль</p>
+                <p className="text-xs text-muted-foreground">Profit</p>
               </div>
             </div>
           </div>
@@ -290,13 +290,13 @@ function ProfitPage() {
         <div className="panel min-w-0">
           <div className="panel-heading">
             <div>
-              <h2>Прибыль по типам локаций</h2>
-              <p>Одинаково ли работают категории в разных типах точек</p>
+              <h2>Profit by location type</h2>
+              <p>Whether categories perform the same across store types</p>
             </div>
           </div>
           <div className="mt-6 h-72">
             {locationChart.length === 0 ? (
-              <div className="grid h-full place-items-center text-sm text-muted-foreground">Нет данных</div>
+              <div className="grid h-full place-items-center text-sm text-muted-foreground">No data</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={locationChart}>
@@ -317,20 +317,20 @@ function ProfitPage() {
         <div className="panel min-w-0">
           <div className="panel-heading">
             <div>
-              <h2>Магазины с другим лидером</h2>
-              <p>Здесь больше всего зарабатывает не «{chainTop ?? "—"}»</p>
+              <h2>Stores with a different leader</h2>
+              <p>Top earner here is not «{chainTop ?? "—"}»</p>
             </div>
           </div>
           <div className="mt-4 max-h-80 overflow-auto">
             {deviating.length === 0 ? (
               <p className="py-10 text-center text-sm text-muted-foreground">
-                Во всех магазинах лидирует одна и та же категория — структура прибыли одинаковая.
+                Every store is led by the same category — the profit mix is identical.
               </p>
             ) : (
               <table className="w-full min-w-[420px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
-                    <th>Магазин</th><th>Лидер</th><th>Доля</th><th>Прибыль</th>
+                    <th>Store</th><th>Leader</th><th>Share</th><th>Profit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -352,18 +352,18 @@ function ProfitPage() {
       <section className="mt-5 panel overflow-hidden p-0">
         <div className="panel-heading border-b border-border p-5 md:p-6">
           <div>
-            <h2>Матрица: магазин × категория</h2>
-            <p>Доля категории в прибыли магазина — тёмнее значит важнее для точки</p>
+            <h2>Matrix: store × category</h2>
+            <p>Category share of store profit — darker means more important for that store</p>
           </div>
         </div>
         <div className="max-h-[520px] overflow-auto">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="sticky top-0 bg-muted/70 backdrop-blur">
               <tr className="text-xs uppercase text-muted-foreground">
-                <th className="px-4 py-3">Магазин</th>
-                <th className="px-4 py-3">Тип</th>
+                <th className="px-4 py-3">Store</th>
+                <th className="px-4 py-3">Type</th>
                 {categoryNames.map((name) => <th key={name} className="px-4 py-3">{name}</th>)}
-                <th className="px-4 py-3">Прибыль</th>
+                <th className="px-4 py-3">Profit</th>
               </tr>
             </thead>
             <tbody>
@@ -396,15 +396,15 @@ function ProfitPage() {
       <section className="mt-5 panel overflow-hidden p-0">
         <div className="panel-heading border-b border-border p-5 md:p-6">
           <div>
-            <h2>Топ товаров по прибыли</h2>
-            <p>Что именно зарабатывает больше всего внутри категорий</p>
+            <h2>Top products by profit</h2>
+            <p>What exactly earns the most within categories</p>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] text-left text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
-                <th>Товар</th><th>Категория</th><th>Прибыль</th><th>Выручка</th><th>Маржа</th><th>Продано, шт.</th>
+                <th>Product</th><th>Category</th><th>Profit</th><th>Revenue</th><th>Margin</th><th>Units sold</th>
               </tr>
             </thead>
             <tbody>
